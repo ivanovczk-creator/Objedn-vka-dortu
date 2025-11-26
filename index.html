@@ -8,9 +8,9 @@
   <script type="importmap">
 {
   "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
     "vite": "https://aistudiocdn.com/vite@^7.2.4",
@@ -23,5 +23,35 @@
   <body class="bg-brand-50 text-gray-800 antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+
+    <!-- 
+      Netlify Form Detection 
+      Tento skrytý formulář slouží k tomu, aby Netlify rozpoznalo, že sbíráme data a soubory.
+    -->
+    <form name="cake-order" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="customerName" />
+      <input type="text" name="customerEmail" />
+      <input type="text" name="customerPhone" />
+      <input type="text" name="pickupDate" />
+      <input type="text" name="pickupLocation" />
+      
+      <input type="text" name="shape" />
+      <input type="text" name="tiers" />
+      <input type="text" name="tierSizes" />
+      <input type="text" name="customSizeNote" />
+      
+      <input type="text" name="filling" />
+      <input type="text" name="sponge" />
+      <input type="text" name="surface" />
+      <input type="text" name="surfaceDetails" />
+      
+      <input type="text" name="inscription" />
+      <textarea name="specifications"></textarea>
+      <input type="number" name="quantity" />
+      
+      <!-- File inputs must match the names used in FormData in App.tsx -->
+      <input type="file" name="images" multiple />
+      <input type="file" name="ediblePrintImage" />
+    </form>
   </body>
 </html>

@@ -4,7 +4,7 @@ import { LOCATIONS, SHAPES, FILLINGS, SPONGES, SURFACES, CAKE_COLORS, ROUND_SIZE
 import { Steps } from './components/Steps';
 import { Calendar } from './components/Calendar';
 import { analyzeCakeImage } from './services/geminiService';
-import { Camera, MapPin, Calendar as CalendarIcon, Loader2, CheckCircle2, ChevronLeft, ChevronRight, Upload, X, Plus, Mail, Phone, User, Printer } from 'lucide-react';
+import { Camera, MapPin, Calendar as CalendarIcon, Loader2, CheckCircle2, ChevronLeft, ChevronRight, Upload, X, Plus, Mail, Phone, User, Printer, Send } from 'lucide-react';
 
 const INITIAL_ORDER: CakeOrder = {
   tiers: 1,
@@ -29,6 +29,11 @@ export default function App() {
   const [order, setOrder] = useState<CakeOrder>(INITIAL_ORDER);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysisResult, setAiAnalysisResult] = useState<string | null>(null);
+  
+  // New states for form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -78,7 +83,6 @@ export default function App() {
       console.error("Error handling file upload:", error);
       alert("Nepodařilo se nahrát obrázek. Zkuste to prosím znovu.");
     } finally {
-      // Reset input value to allow re-uploading the same file if needed
       e.target.value = '';
     }
   };
@@ -92,7 +96,6 @@ export default function App() {
         previewUrl: URL.createObjectURL(file)
       };
       setOrder(prev => ({ ...prev, ediblePrintImage: newImage }));
-      // Reset input
       e.target.value = '';
     }
   };
@@ -125,7 +128,6 @@ export default function App() {
     setOrder(prev => ({ ...prev, ...updates }));
   };
 
-  // Logic to get available sizes based on shape
   const getSizesForShape = (shape: CakeShape) => {
     switch (shape) {
       case CakeShape.ROUND: return ROUND_SIZES;
@@ -136,15 +138,11 @@ export default function App() {
     }
   };
 
-  // Logic to handle shape change (resets sizes to avoid invalid states)
   const handleShapeChange = (shape: CakeShape) => {
     const defaultSize = getSizesForShape(shape)[0];
     const newTierSizes = Array(order.tiers).fill(defaultSize);
     
-    // For tiered logic, we should try to pre-fill cascading sizes if possible, 
-    // but simpler to just set defaults and let user fix
     if (order.tiers > 1 && shape !== CakeShape.RECTANGLE) {
-       // Try to set descending defaults
        const available = getSizesForShape(shape);
        for(let i=0; i<order.tiers; i++) {
          if (i < available.length) newTierSizes[i] = available[i];
@@ -155,7 +153,7 @@ export default function App() {
       ...prev, 
       shape, 
       tierSizes: newTierSizes,
-      customSizeNote: '' // Reset custom note
+      customSizeNote: ''
     }));
   };
 
@@ -163,13 +161,10 @@ export default function App() {
     const currentSizes = [...order.tierSizes];
     const available = getSizesForShape(order.shape);
     
-    // Adjust array size
     if (count > currentSizes.length) {
-       // Adding tiers: Attempt to find a smaller size than the last one
        while(currentSizes.length < count) {
          const lastSize = currentSizes[currentSizes.length - 1];
          const lastIndex = available.indexOf(lastSize);
-         // If possible, pick next smaller size, else repeat last (user will change it)
          const nextSize = (lastIndex !== -1 && lastIndex + 1 < available.length) 
             ? available[lastIndex + 1] 
             : available[available.length - 1];
@@ -185,8 +180,6 @@ export default function App() {
     const newSizes = [...order.tierSizes];
     newSizes[tierIndex] = newVal;
     
-    // Auto-adjust lower tiers if they become invalid (larger than upper tier)
-    // Only applies to Round/Square/Heart where strictly "Smaller" logic applies
     if (order.shape !== CakeShape.RECTANGLE) {
         const available = getSizesForShape(order.shape);
         for (let i = tierIndex + 1; i < newSizes.length; i++) {
@@ -194,7 +187,6 @@ export default function App() {
             const currSizeVal = parseInt(newSizes[i]);
             
             if (!isNaN(prevSizeVal) && !isNaN(currSizeVal) && currSizeVal >= prevSizeVal) {
-                // Find first smaller option
                 const prevIndexInList = available.indexOf(newSizes[i-1]);
                 if (prevIndexInList !== -1 && prevIndexInList + 1 < available.length) {
                     newSizes[i] = available[prevIndexInList + 1];
@@ -208,14 +200,10 @@ export default function App() {
 
   const getAvailableOptionsForTier = (tierIndex: number) => {
     const allSizes = getSizesForShape(order.shape);
-    if (tierIndex === 0) return allSizes; // Bottom tier - all options
-    
-    if (order.shape === CakeShape.RECTANGLE) return allSizes; // Rectangle logic is looser usually
-
-    // For Round/Square/Heart: must be smaller than the tier above it (index - 1)
+    if (tierIndex === 0) return allSizes;
+    if (order.shape === CakeShape.RECTANGLE) return allSizes;
     const sizeAbove = parseInt(order.tierSizes[tierIndex - 1]);
     if (isNaN(sizeAbove)) return allSizes;
-
     return allSizes.filter(s => parseInt(s) < sizeAbove);
   };
 
@@ -249,77 +237,120 @@ export default function App() {
 
   const selectedLocation = LOCATIONS.find(l => l.id === order.pickupLocationId);
 
-  // Helper to find hex for a color name
   const getColorHex = (name?: string) => {
     if (!name) return 'transparent';
     const c = CAKE_COLORS.find(c => c.name === name);
     return c ? c.hex : 'transparent';
   };
 
-  const handleSubmitOrder = () => {
+  const handleSubmitToNetlify = async () => {
     if (!order.customerEmail || !order.customerName || !order.customerPhone) {
-        alert("Vyplňte prosím všechny kontaktní údaje (Jméno, Telefon, Email), abychom vás mohli kontaktovat.");
-        return;
+      alert("Vyplňte prosím všechny kontaktní údaje.");
+      return;
     }
 
-    // Check if user has uploaded images (either reference or edible print)
-    const hasImagesToAttach = order.images.length > 0 || !!order.ediblePrintImage;
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    let surfaceDetails: string = order.surface;
-    if (order.surface === SurfaceType.MARZIPAN) surfaceDetails += ` (Barva: ${order.marzipanColor || 'Neuvedeno'})`;
-    if (order.surface === SurfaceType.CREAM) surfaceDetails += ` (Barva: ${order.creamColor || 'Neuvedeno'})`;
-    if (order.surface === SurfaceType.CREAM_DRIP) surfaceDetails += ` (Krém: ${order.creamColor || 'Neuvedeno'}, Stékání: ${order.dripType || 'Neuvedeno'})`;
-    if (order.surface === SurfaceType.CHOCO_SHAVINGS) surfaceDetails += ` (Typ: ${order.shavingsType || 'Neuvedeno'})`;
-    if (order.surface === SurfaceType.EDIBLE_PRINT) surfaceDetails += ` (TISK Z PŘÍLOHY)`;
-    if (order.surface === SurfaceType.OTHER) surfaceDetails += ` (Pozn: ${order.surfaceOtherNote})`;
+    try {
+      // Prepare detailed surface string
+      let surfaceDetails: string = '';
+      if (order.surface === SurfaceType.MARZIPAN) surfaceDetails = `Barva: ${order.marzipanColor || 'Neuvedeno'}`;
+      if (order.surface === SurfaceType.CREAM) surfaceDetails = `Barva: ${order.creamColor || 'Neuvedeno'}`;
+      if (order.surface === SurfaceType.CREAM_DRIP) surfaceDetails = `Krém: ${order.creamColor || 'Neuvedeno'}, Stékání: ${order.dripType || 'Neuvedeno'}`;
+      if (order.surface === SurfaceType.CHOCO_SHAVINGS) surfaceDetails = `Typ: ${order.shavingsType || 'Neuvedeno'}`;
+      if (order.surface === SurfaceType.OTHER) surfaceDetails = `Pozn: ${order.surfaceOtherNote}`;
 
-    const subject = `Poptávka dortu - ${order.customerName}`;
-    const body = `
-NOVÁ POPTÁVKA DORTU
----------------------
-Zákazník: ${order.customerName}
-Telefon: ${order.customerPhone}
-Email: ${order.customerEmail}
+      const formData = new FormData();
+      formData.append('form-name', 'cake-order');
+      formData.append('customerName', order.customerName);
+      formData.append('customerEmail', order.customerEmail);
+      formData.append('customerPhone', order.customerPhone);
+      formData.append('pickupDate', order.pickupDate ? order.pickupDate.toLocaleDateString('cs-CZ') : '');
+      formData.append('pickupLocation', LOCATIONS.find(l => l.id === order.pickupLocationId)?.name || '');
+      
+      formData.append('shape', order.shape);
+      formData.append('tiers', order.tiers.toString());
+      formData.append('tierSizes', order.tierSizes.join(' / '));
+      formData.append('customSizeNote', order.customSizeNote || '');
+      
+      formData.append('filling', order.filling);
+      formData.append('sponge', order.sponge);
+      formData.append('surface', order.surface);
+      formData.append('surfaceDetails', surfaceDetails);
+      
+      formData.append('inscription', order.inscription);
+      formData.append('specifications', order.specifications);
+      formData.append('quantity', order.quantity.toString());
 
-Datum vyzvednutí: ${order.pickupDate ? order.pickupDate.toLocaleDateString('cs-CZ') : 'Nevybráno'}
-Místo: ${LOCATIONS.find(l => l.id === order.pickupLocationId)?.name}
+      // Append Images (Netlify Forms handles multiple files)
+      if (order.images.length > 0) {
+        order.images.forEach((img) => {
+          formData.append('images', img.file);
+        });
+      }
 
-DORT
-----
-Tvar: ${order.shape}
-Patra: ${order.tiers}
-Rozměry: ${order.tierSizes.join(' / ')} cm ${order.customSizeNote ? `(Pozn: ${order.customSizeNote})` : ''}
+      if (order.ediblePrintImage) {
+        formData.append('ediblePrintImage', order.ediblePrintImage.file);
+      }
 
-Korpus: ${order.sponge}
-Náplň: ${order.filling}
-Povrch: ${surfaceDetails}
+      const response = await fetch('/', {
+        method: 'POST',
+        body: formData,
+      });
 
-${hasImagesToAttach ? '!!! DŮLEŽITÉ UPOZORNĚNÍ !!!\nZákazník avizoval, že má k dispozici fotografie (předloha nebo tisk). Prosím zkontrolujte přílohy emailu.\n' : ''}
+      if (!response.ok) {
+        throw new Error('Chyba při odesílání formuláře');
+      }
 
-Nápis: ${order.inscription}
-Množství: ${order.quantity} ks
-
-Poznámky:
-${order.specifications}
-
----------------------------------------------------
-INFORMACE PRO ZÁKAZNÍKA:
-Pokud jste do formuláře nahrál(a) fotografie,
-PROSÍM, PŘILOŽTE JE NYNÍ RUČNĚ K TOMUTO EMAILU!
-Z technických důvodů se soubory nepřikládají automaticky.
----------------------------------------------------
-    `;
-    
-    // Explicit warning before opening mail client
-    if (hasImagesToAttach) {
-      alert("⚠️ DŮLEŽITÉ UPOZORNĚNÍ ⚠️\n\nVáš emailový klient se nyní otevře s předvyplněnou objednávkou.\n\nZ technických důvodů internetových prohlížečů se FOTOGRAFIE NEPŘIKLÁDAJÍ AUTOMATICKY.\n\nProsím, PŘILOŽTE FOTOGRAFIE RUČNĚ do otevřeného emailu před odesláním.\n\n(Klikněte OK pro otevření emailu)");
+      setSubmitSuccess(true);
+    } catch (error) {
+      console.error("Submission error:", error);
+      setSubmitError("Omlouváme se, došlo k chybě při odesílání objednávky. Prosím kontaktujte nás telefonicky.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const mailtoLink = `mailto:cukrarna.pist@seznam.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
   };
 
-  // Render Functions
+  // --- RENDER SUCCESS/LOADING STATES ---
+
+  if (submitSuccess) {
+    return (
+      <div className="min-h-screen bg-brand-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-brand-100 max-w-lg w-full text-center">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
+          </div>
+          <h2 className="text-3xl font-serif text-brand-900 mb-4">Poptávka odeslána!</h2>
+          <p className="text-gray-600 mb-6">
+            Děkujeme za vaši poptávku. Všechny údaje i nahrané fotografie jsme úspěšně přijali. 
+            Budeme vás co nejdříve kontaktovat pro potvrzení.
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-brand-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-brand-700 transition-colors"
+          >
+            Nová objednávka
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isSubmitting) {
+    return (
+      <div className="min-h-screen bg-brand-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 text-brand-500 animate-spin mx-auto mb-4" />
+          <h2 className="text-2xl font-serif text-brand-900">Odesílám objednávku a fotografie...</h2>
+          <p className="text-gray-500 mt-2">Prosím nezavírejte okno, může to chvíli trvat.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- MAIN RENDER ---
+
   const renderStep1 = () => (
     <div className="space-y-6 animate-fade-in">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
@@ -327,7 +358,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
           <Camera className="mr-2 text-brand-500" /> Předloha
         </h2>
         
-        {/* Image Upload Section */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-bold text-gray-700">Fotografie předlohy</label>
@@ -382,10 +412,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
                 )}
               </div>
             )}
-            {/* Warning about upload */}
-            <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded border border-orange-100 mt-2">
-                Poznámka: Fotografie se uloží v prohlížeči, ale k emailu je bude nutné přiložit ručně.
-            </div>
           </div>
           
           {isAnalyzing && (
@@ -402,7 +428,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
         </div>
       </div>
 
-      {/* Shape and Dimensions Section */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
          <h2 className="text-2xl font-serif text-brand-900 mb-6">Tvar a Velikost</h2>
          
@@ -469,7 +494,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
                         {availableOptions.map(s => <option key={s} value={s}>{s}</option>)}
                      </select>
                      
-                     {/* Custom Input for Rectangle */}
                      {isRectangleCustom && (
                        <div className="mt-2 animate-fade-in">
                           <input 
@@ -497,7 +521,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
         <h2 className="text-2xl font-serif text-brand-900 mb-6">Příchuť a Povrch</h2>
 
-        {/* Filling & Sponge */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Náplň</label>
@@ -521,7 +544,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
           </div>
         </div>
 
-        {/* Surface */}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-3">Povrchová úprava</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -543,7 +565,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
              ))}
           </div>
 
-          {/* Conditional: Marzipan Color */}
           {order.surface === SurfaceType.MARZIPAN && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
               <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu marcipánu *</label>
@@ -558,7 +579,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
                     style={{ backgroundColor: color.hex }}
                     title={color.name}
                   >
-                     {/* Show checkmark if selected for accessibility/clarity */}
                      {order.marzipanColor === color.name && (
                        <span className={`text-xs font-bold ${['Bílá', 'Žlutá'].includes(color.name) ? 'text-black' : 'text-white'}`}>✓</span>
                      )}
@@ -571,7 +591,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
             </div>
           )}
 
-          {/* Conditional: Cream Color */}
           {(order.surface === SurfaceType.CREAM || order.surface === SurfaceType.CREAM_DRIP) && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
               <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu krému *</label>
@@ -598,7 +617,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
             </div>
           )}
           
-          {/* Conditional: Drip Type */}
           {order.surface === SurfaceType.CREAM_DRIP && (
             <div className="mt-2 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
               <label className="block text-sm font-bold text-gray-700 mb-2">Druh stékané čokolády *</label>
@@ -620,7 +638,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
             </div>
           )}
 
-          {/* Conditional: Shavings Type */}
           {order.surface === SurfaceType.CHOCO_SHAVINGS && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
               <label className="block text-sm font-bold text-gray-700 mb-2">Barva čoko-hoblin *</label>
@@ -642,7 +659,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
             </div>
           )}
 
-          {/* Conditional: Edible Print Upload */}
           {order.surface === SurfaceType.EDIBLE_PRINT && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
@@ -670,14 +686,9 @@ Z technických důvodů se soubory nepřikládají automaticky.
                     </button>
                  </div>
                )}
-               {/* Warning about upload */}
-               <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded border border-orange-100 mt-2">
-                   Poznámka: Fotografie se uloží v prohlížeči, ale k emailu je bude nutné přiložit ručně.
-               </div>
             </div>
           )}
 
-          {/* Conditional: Other Note */}
           {order.surface === SurfaceType.OTHER && (
             <div className="mt-4 animate-fade-in">
               <label className="block text-sm font-bold text-gray-700 mb-2">Poznámka k povrchu</label>
@@ -742,7 +753,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
 
   const renderStep4 = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
-      {/* Calendar Section */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
         <h2 className="text-xl font-serif text-brand-900 mb-4 flex items-center">
            <CalendarIcon className="mr-2 text-brand-500" /> Datum vyzvednutí
@@ -760,7 +770,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
         )}
       </div>
 
-      {/* Location Section */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100 flex flex-col">
          <h2 className="text-xl font-serif text-brand-900 mb-4 flex items-center">
            <MapPin className="mr-2 text-brand-500" /> Místo vyzvednutí
@@ -802,8 +811,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
 
   const renderStep5 = () => (
      <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
-        
-        {/* Contact Form */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
              <h2 className="text-xl font-serif text-brand-900 mb-4 flex items-center">
                 <User className="mr-2 text-brand-500" /> Kontaktní údaje
@@ -853,7 +860,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
              </div>
         </div>
 
-        {/* Summary Card */}
         <div className="bg-white p-8 rounded-2xl shadow-lg border border-brand-200 relative overflow-hidden">
            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-300 to-brand-600" />
            
@@ -871,7 +877,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
                       <img key={img.id} src={img.previewUrl} className="h-12 w-12 object-cover rounded-lg border border-gray-200" alt="cake preview" />
                     ))}
                   </div>
-                  <div className="text-orange-600 text-xs mt-1 font-bold">! Tyto obrázky bude nutné ručně vložit do emailu !</div>
                 </div>
               )}
               
@@ -899,7 +904,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
                     <span className="block text-gray-500 text-xs uppercase font-bold">Povrch</span>
                     <span className="font-medium text-gray-900">{order.surface}</span>
                     
-                    {/* Summary Details for Surface */}
                     {order.surface === SurfaceType.MARZIPAN && order.marzipanColor && (
                        <div className="flex items-center justify-end gap-1 mt-1">
                           <span className="text-xs text-gray-600">{order.marzipanColor}</span>
@@ -931,7 +935,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
                     {order.surface === SurfaceType.EDIBLE_PRINT && order.ediblePrintImage && (
                        <div className="mt-1">
                           <img src={order.ediblePrintImage.previewUrl} alt="print preview" className="h-10 w-auto rounded border border-gray-200 ml-auto" />
-                          <div className="text-[10px] text-red-500 mt-1 font-bold">! Nezapomeňte ručně vložit do emailu !</div>
                        </div>
                     )}
                  </div>
@@ -963,6 +966,12 @@ Z technických důvodů se soubory nepřikládají automaticky.
       <main className="max-w-4xl mx-auto px-4 mt-6">
         <Steps currentStep={step} totalSteps={5} />
         
+        {submitError && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-200 mb-6 font-bold text-center">
+             {submitError}
+          </div>
+        )}
+
         <div className="mt-8">
            {step === 1 && renderStep1()}
            {step === 2 && renderStep2()}
@@ -972,7 +981,6 @@ Z technických důvodů se soubory nepřikládají automaticky.
         </div>
       </main>
 
-      {/* Sticky Bottom Actions */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-40">
         <div className="max-w-4xl mx-auto flex justify-between items-center gap-4">
           <button 
@@ -992,10 +1000,10 @@ Z technických důvodů se soubory nepřikládají automaticky.
              </button>
           ) : (
              <button 
-               onClick={handleSubmitOrder}
+               onClick={handleSubmitToNetlify}
                className="flex-1 sm:flex-none flex justify-center items-center bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 hover:shadow-green-300/50 transition-all"
              >
-               Odeslat poptávku <Mail className="ml-2 h-5 w-5" />
+               Odeslat poptávku <Send className="ml-2 h-5 w-5" />
              </button>
           )}
         </div>
