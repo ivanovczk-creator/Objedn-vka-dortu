@@ -1,20 +1,47 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# 🍰 Sladké Mámení - Objednávkový systém
 
-# Run and deploy your AI Studio app
+Moderní webová aplikace pro zakázkovou výrobu dortů s integrací umělé inteligence. Aplikace umožňuje zákazníkům nahrávat předlohy, konfigurovat parametry dortu a automaticky generovat objednávky.
 
-This contains everything you need to run your app locally.
+## ✨ Klíčové Funkce
 
-View your app in AI Studio: https://ai.studio/apps/drive/1umw_nn0ogbmxF8SO_0X_dN9_jxOLXhXb
+- **AI Analýza Předlohy**: Využívá Google Gemini API k analýze nahrané fotografie dortu, detekci tvaru a barev.
+- **Multiupload**: Možnost nahrát až 5 fotografií předlohy.
+- **Jedlý Tisk**: Podpora pro nahrávání obrázků pro tisk na jedlý papír.
+- **Interaktivní Konfigurátor**:
+  - Dynamický výběr pater a průměrů.
+  - Specifické možnosti pro různé tvary (Kulatý, Čtverec, Obdélník, Srdce).
+  - Výběr příchutí, korpusů a povrchových úprav.
+- **Kalendář**: Chytrý výběr data vyzvednutí s vyloučením svátků a minimální lhůtou pro výrobu (7 dní).
+- **Generování E-mailu**: Automatické sestavení `mailto` odkazu s kompletním shrnutím objednávky.
 
-## Run Locally
+## 🛠️ Technologie
 
-**Prerequisites:**  Node.js
+- **Frontend**: React 19, TypeScript
+- **Styling**: Tailwind CSS
+- **AI**: Google Gemini SDK (@google/genai)
+- **Icons**: Lucide React
 
+## 🚀 Spuštění
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Tento projekt využívá moderní ES Modules a import mapy přes CDN. Pro spuštění není nutný build step (např. Webpack/Vite), ale je potřeba lokální server.
+
+### Prerekvizity
+
+- API Klíč pro Google Gemini (nastaven v prostředí jako `API_KEY`).
+
+### Lokální vývoj
+
+1. Otevřete složku projektu.
+2. Spusťte libovolný statický server (např. rozšíření "Live Server" ve VS Code nebo `npx serve`).
+3. Otevřete `index.html`.
+
+## 📦 Struktura Projektu
+
+- `/components` - React komponenty (Steps, Calendar).
+- `/services` - Logika pro komunikaci s AI.
+- `App.tsx` - Hlavní logika formuláře a stavu aplikace.
+- `types.ts` & `constants.ts` - Definice typů a konfigurační data (ceny, rozměry, prodejny).
+
+## 📝 Poznámky
+
+Při odesílání objednávky s **jedlým tiskem** je zákazník v e-mailu upozorněn, aby přiložil soubor jako přílohu, jelikož prohlížeč nemůže automaticky přikládat soubory do `mailto` odkazů.

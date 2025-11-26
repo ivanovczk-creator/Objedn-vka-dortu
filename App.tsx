@@ -31,41 +31,56 @@ export default function App() {
   const [aiAnalysisResult, setAiAnalysisResult] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles: File[] = Array.from(e.target.files);
-      const currentCount = order.images.length;
-      const remainingSlots = 5 - currentCount;
-      
-      if (remainingSlots <= 0) return;
-
-      const filesToProcess = newFiles.slice(0, remainingSlots);
-      
-      const newImages: CakeImage[] = filesToProcess.map(file => ({
-        id: Math.random().toString(36).substring(7),
-        file,
-        previewUrl: URL.createObjectURL(file)
-      }));
-
-      setOrder(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
-
-      if (newImages.length > 0 && !isAnalyzing) {
-        setIsAnalyzing(true);
-        setAiAnalysisResult("Analyzuji obrázek...");
+    try {
+      if (e.target.files && e.target.files.length > 0) {
+        const newFiles: File[] = Array.from(e.target.files);
+        const currentCount = order.images.length;
+        const remainingSlots = 5 - currentCount;
         
-        const analysis = await analyzeCakeImage(newImages[0].file);
-        setIsAnalyzing(false);
+        if (remainingSlots <= 0) return;
 
-        if (analysis.suggestedShape) {
-          handleShapeChange(analysis.suggestedShape);
-        }
-        if (analysis.suggestedColor) {
-          // If shape is marzipan/cream/cream_drip, suggest color
-          setOrder(prev => ({ ...prev, marzipanColor: analysis.suggestedColor, creamColor: analysis.suggestedColor }));
-        }
-        if (analysis.description) {
-          setAiAnalysisResult(analysis.description);
+        const filesToProcess = newFiles.slice(0, remainingSlots);
+        
+        const newImages: CakeImage[] = filesToProcess.map(file => ({
+          id: Math.random().toString(36).substring(7),
+          file,
+          previewUrl: URL.createObjectURL(file)
+        }));
+
+        setOrder(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
+
+        // Only analyze if it's the first batch and not already analyzing
+        if (newImages.length > 0 && !isAnalyzing) {
+          setIsAnalyzing(true);
+          setAiAnalysisResult("Analyzuji obrázek...");
+          
+          try {
+            const analysis = await analyzeCakeImage(newImages[0].file);
+            
+            if (analysis.suggestedShape) {
+              handleShapeChange(analysis.suggestedShape);
+            }
+            if (analysis.suggestedColor) {
+              // If shape is marzipan/cream/cream_drip, suggest color
+              setOrder(prev => ({ ...prev, marzipanColor: analysis.suggestedColor, creamColor: analysis.suggestedColor }));
+            }
+            if (analysis.description) {
+              setAiAnalysisResult(analysis.description);
+            }
+          } catch (analysisError) {
+            console.warn("AI analysis failed silently to not disrupt UX", analysisError);
+            setAiAnalysisResult(null);
+          } finally {
+            setIsAnalyzing(false);
+          }
         }
       }
+    } catch (error) {
+      console.error("Error handling file upload:", error);
+      alert("Nepodařilo se nahrát obrázek. Zkuste to prosím znovu.");
+    } finally {
+      // Reset input value to allow re-uploading the same file if needed
+      e.target.value = '';
     }
   };
 
@@ -78,6 +93,8 @@ export default function App() {
         previewUrl: URL.createObjectURL(file)
       };
       setOrder(prev => ({ ...prev, ediblePrintImage: newImage }));
+      // Reset input
+      e.target.value = '';
     }
   };
 
@@ -203,7 +220,18 @@ export default function App() {
     return allSizes.filter(s => parseInt(s) < sizeAbove);
   };
 
-  const nextStep = () => setStep(s => Math.min(s + 1, 5));
+  const isStepValid = () => {
+    if (step === 2 && order.surface === SurfaceType.EDIBLE_PRINT && !order.ediblePrintImage) return false;
+    if (step === 4 && !order.pickupDate) return false;
+    return true;
+  };
+
+  const nextStep = () => {
+    if (isStepValid()) {
+      setStep(s => Math.min(s + 1, 5));
+    }
+  };
+  
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
   const selectedLocation = LOCATIONS.find(l => l.id === order.pickupLocationId);
@@ -272,25 +300,29 @@ ${order.specifications}
           
           <div className="space-y-4">
             {order.images.length === 0 ? (
-              <div className="mt-1 flex justify-center px-6 pt-10 pb-10 border-2 border-brand-200 border-dashed rounded-xl hover:bg-brand-50 transition-colors relative cursor-pointer group">
-                <div className="space-y-1 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-brand-400 group-hover:scale-110 transition-transform" />
-                  <div className="flex text-sm text-gray-600 justify-center">
-                    <label htmlFor="file-upload" className="relative cursor-pointer bg-transparent rounded-md font-medium text-brand-600 hover:text-brand-500 focus-within:outline-none">
-                      <span>Nahrát fotografie</span>
-                      <input 
-                        id="file-upload" 
-                        name="file-upload" 
-                        type="file" 
-                        className="sr-only" 
-                        accept="image/*" 
-                        multiple
-                        onChange={handleFileChange} 
-                      />
-                    </label>
+              <div className="mt-1">
+                <label 
+                  htmlFor="main-file-upload" 
+                  className="flex flex-col justify-center px-6 pt-10 pb-10 border-2 border-brand-200 border-dashed rounded-xl hover:bg-brand-50 transition-colors cursor-pointer group w-full"
+                >
+                  <div className="space-y-1 text-center">
+                    <Upload className="mx-auto h-12 w-12 text-brand-400 group-hover:scale-110 transition-transform" />
+                    <div className="flex text-sm text-gray-600 justify-center">
+                      <span className="relative font-medium text-brand-600 hover:text-brand-500">
+                        Nahrát fotografie
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500">PNG, JPG do 10MB (Max 5 souborů)</p>
                   </div>
-                  <p className="text-xs text-gray-500">PNG, JPG do 10MB (Max 5 souborů)</p>
-                </div>
+                  <input 
+                    id="main-file-upload" 
+                    type="file" 
+                    className="sr-only" 
+                    accept="image/*" 
+                    multiple
+                    onChange={handleFileChange} 
+                  />
+                </label>
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -555,16 +587,19 @@ ${order.specifications}
           {order.surface === SurfaceType.EDIBLE_PRINT && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center">
-                  <Printer className="w-4 h-4 mr-2" /> Nahrajte obrázek pro tisk
+                  <Printer className="w-4 h-4 mr-2" /> Nahrajte obrázek pro tisk *
                </label>
                
                {!order.ediblePrintImage ? (
-                 <label className="border-2 border-brand-200 border-dashed rounded-xl flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-white transition-colors">
-                    <Upload className="h-8 w-8 text-brand-400 mb-2" />
-                    <span className="text-sm font-medium text-brand-600">Vybrat soubor</span>
-                    <span className="text-xs text-gray-400 mt-1">JPG, PNG</span>
-                    <input type="file" className="sr-only" accept="image/*" onChange={handleEdiblePrintUpload} />
-                 </label>
+                 <>
+                   <label className="border-2 border-brand-200 border-dashed rounded-xl flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-white transition-colors bg-white">
+                      <Upload className="h-8 w-8 text-brand-400 mb-2" />
+                      <span className="text-sm font-medium text-brand-600">Vybrat soubor</span>
+                      <span className="text-xs text-gray-400 mt-1">JPG, PNG</span>
+                      <input type="file" className="sr-only" accept="image/*" onChange={handleEdiblePrintUpload} />
+                   </label>
+                   <p className="text-xs text-red-500 mt-2 font-medium">Pro pokračování je nutné nahrát obrázek.</p>
+                 </>
                ) : (
                  <div className="relative group aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white">
                     <img src={order.ediblePrintImage.previewUrl} alt="Edible print" className="w-full h-full object-contain" />
@@ -841,8 +876,8 @@ ${order.specifications}
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-white pb-24">
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-100">
          <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-            <h1 className="font-serif text-2xl font-bold text-brand-800">Sladké Mámení</h1>
-            <span className="hidden sm:inline-block text-xs font-bold text-brand-400 tracking-widest uppercase">Objednávkový systém</span>
+            <h1 className="font-serif text-xl sm:text-2xl font-bold text-brand-800 truncate">Objednávka dortu - Cukrářství Blahutovi</h1>
+            <span className="hidden sm:inline-block text-xs font-bold text-brand-400 tracking-widest uppercase ml-4">Objednávkový systém</span>
          </div>
       </nav>
 
@@ -872,7 +907,7 @@ ${order.specifications}
           {step < 5 ? (
              <button 
                onClick={nextStep}
-               disabled={step === 4 && !order.pickupDate}
+               disabled={!isStepValid()}
                className="flex-1 sm:flex-none flex justify-center items-center bg-brand-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-brand-700 hover:shadow-brand-300/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
              >
                Pokračovat <ChevronRight className="ml-1 h-5 w-5" />

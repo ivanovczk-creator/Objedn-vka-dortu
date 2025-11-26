@@ -1,5 +1,5 @@
 {
-  "name": "Sladké Mámení - Objednávka Dortu",
+  "name": "Objednávka dortu - Cukrářství Blahutovi",
   "description": "Aplikace pro zakázkovou výrobu dortů s AI analýzou předlohy.",
   "requestFramePermissions": [
     "camera"
