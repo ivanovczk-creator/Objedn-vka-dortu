@@ -264,7 +264,7 @@ export default function App() {
         return;
     }
 
-    let surfaceDetails = order.surface;
+    let surfaceDetails: string = order.surface;
     if (order.surface === SurfaceType.MARZIPAN) surfaceDetails += ` (Barva: ${order.marzipanColor || 'Neuvedeno'})`;
     if (order.surface === SurfaceType.CREAM) surfaceDetails += ` (Barva: ${order.creamColor || 'Neuvedeno'})`;
     if (order.surface === SurfaceType.CREAM_DRIP) surfaceDetails += ` (Krém: ${order.creamColor || 'Neuvedeno'}, Stékání: ${order.dripType || 'Neuvedeno'})`;
