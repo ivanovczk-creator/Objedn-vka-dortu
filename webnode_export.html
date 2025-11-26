@@ -1,854 +1,398 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Poptávka dortu - Cukrářství Blahutovi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-    
-    <!-- Configure Tailwind -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              serif: ['"Playfair Display"', 'serif'],
-              sans: ['"Lato"', 'sans-serif'],
-            },
-            colors: {
-              brand: {
-                50: '#fdf2f8',
-                100: '#fce7f3',
-                200: '#fbcfe8',
-                300: '#f9a8d4',
-                400: '#f472b6',
-                500: '#ec4899',
-                600: '#db2777',
-                800: '#9d174d',
-                900: '#831843',
-              }
-            }
+<!-- TENTO KÓD VLOŽTE DO "HTML" WIDGETU NA WEBNODE -->
+
+<!-- 1. Načtení stylů a knihoven -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          serif: ['"Playfair Display"', 'serif'],
+          sans: ['"Lato"', 'sans-serif'],
+        },
+        colors: {
+          brand: {
+            50: '#fdf2f8', 100: '#fce7f3', 200: '#fbcfe8', 300: '#f9a8d4',
+            400: '#f472b6', 500: '#ec4899', 600: '#db2777', 800: '#9d174d', 900: '#831843',
           }
         }
-      }
-    </script>
-
-    <!-- Custom Scrollbar -->
-    <style>
-      ::-webkit-scrollbar { width: 8px; }
-      ::-webkit-scrollbar-track { background: #fdf2f8; }
-      ::-webkit-scrollbar-thumb { background: #f9a8d4; border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: #f472b6; }
-      .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-
-    <!-- Import Maps for React and Dependencies -->
-    <script type="importmap">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "@google/genai": "https://esm.sh/@google/genai@0.1.1",
-        "lucide-react": "https://esm.sh/lucide-react@0.300.0"
       }
     }
-    </script>
+  }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- Babel for in-browser JSX transpilation -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
-<body class="bg-brand-50 text-gray-800 antialiased">
-    <div id="root"></div>
+<style>
+  /* Lokální styly pro aplikaci */
+  #cake-app-root ::-webkit-scrollbar { width: 8px; }
+  #cake-app-root ::-webkit-scrollbar-track { background: #fdf2f8; }
+  #cake-app-root ::-webkit-scrollbar-thumb { background: #f9a8d4; border-radius: 4px; }
+  #cake-app-root .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
 
-    <!-- MAIN APPLICATION SCRIPT -->
-    <script type="text/babel" data-type="module" data-presets="typescript,react">
-        import React, { useState, useEffect, useMemo } from 'react';
-        import ReactDOM from 'react-dom/client';
-        import { GoogleGenAI } from '@google/genai';
-        import { Camera, MapPin, Calendar as CalendarIcon, Loader2, CheckCircle2, ChevronLeft, ChevronRight, Upload, X, Plus, Mail, Phone, User, Printer } from 'lucide-react';
+<!-- 2. Nastavení importů pro React -->
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "@google/genai": "https://esm.sh/@google/genai@0.1.1",
+    "lucide-react": "https://esm.sh/lucide-react@0.300.0"
+  }
+}
+</script>
 
-        // --- KONFIGURACE ---
-        const API_KEY = "AIzaSyBBLCD7k1lgljXCR6nPrylGnsoOdT1qqqI"; 
+<!-- 3. Kontejner pro aplikaci -->
+<div id="cake-app-root" class="bg-brand-50 text-gray-800 antialiased font-sans p-4 rounded-xl min-h-[600px]">
+  <div style="text-align: center; padding: 40px; color: #db2777;">
+    <svg class="animate-spin h-8 w-8 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    Načítám poptávkový formulář...
+  </div>
+</div>
 
-        // --- ENUMS & CONSTANTS (Merged from types.ts & constants.ts) ---
+<!-- 4. Hlavní logika aplikace -->
+<script type="text/babel" data-type="module">
+    import React, { useState, useEffect, useMemo } from 'react';
+    import ReactDOM from 'react-dom/client';
+    import { GoogleGenAI } from '@google/genai';
+    import { Camera, MapPin, Calendar as CalendarIcon, Loader2, CheckCircle2, ChevronLeft, ChevronRight, Upload, X, Plus, Mail, Phone, User, Printer } from 'lucide-react';
+
+    // --- ZDE VLOŽTE VÁŠ API KLÍČ ---
+    const API_KEY = "AIzaSyBBLCD7k1lgljXCR6nPrylGnsoOdT1qqqI"; 
+
+    // --- DEFINICE DAT ---
+    const CakeShape = { ROUND: 'Kulatý', RECTANGLE: 'Obdélník', SQUARE: 'Čtverec', HEART: 'Srdíčko' };
+    const FillingType = { RASPBERRY: 'Malinová', CHOCOLATE: 'Čokoládová', CHERRY: 'Višňová', BLUEBERRY: 'Borůvková', PISTACHIO: 'Pistáciová', WALNUT: 'Ořechová', APRICOT: 'Meruňková', MANGO_PASSION: 'Mango-maracuja', VANILLA: 'Vanilková' };
+    const SpongeType = { CHOCOLATE: 'Čokoládový', VANILLA: 'Vanilkový', WALNUT: 'Ořechový', MOSS: 'Mechový', RED_VELVET: 'Red-Velvet' };
+    const SurfaceType = { CREAM: 'Krémový', CREAM_DRIP: 'Krémový a stékaná čokoláda', MARZIPAN: 'Marcipánový', CHOCO_SHAVINGS: 'Čoko-hobliny', EDIBLE_PRINT: 'Jedlý tisk', OTHER: 'Jiné' };
+
+    const LOCATIONS = [
+      { id: 'petrvald', name: 'Petřvald', address: 'Šenovská 1', phone: '778 157 857', type: 'store' },
+      { id: 'karvina', name: 'Karviná', address: 'Tř. Těreškovové 2233/28', phone: '778 157 867', type: 'store' },
+      { id: 'ostrava', name: 'Ostrava Zábřeh', address: 'Výškovická 116A', phone: '775 271 101', type: 'store' },
+      { id: 'pist', name: 'Píšť (Výrobna)', address: 'Opavská 218/101', phone: '602 323 788', type: 'factory' }
+    ];
+
+    const CZECH_HOLIDAYS = ["01-01", "01-05", "08-05", "05-07", "06-07", "28-09", "28-10", "17-11", "24-12", "25-12", "26-12"];
+    const CAKE_COLORS = [
+      { name: 'Bílá', hex: '#FFFFFF' }, { name: 'Šedá', hex: '#9CA3AF' }, { name: 'Černá', hex: '#000000' },
+      { name: 'Růžová', hex: '#F472B6' }, { name: 'Červená', hex: '#EF4444' }, { name: 'Hnědá', hex: '#854d0e' },
+      { name: 'Oranžová', hex: '#F97316' }, { name: 'Modrá', hex: '#3B82F6' }, { name: 'Fialová', hex: '#A855F7' },
+      { name: 'Zelená', hex: '#22C55E' }, { name: 'Žlutá', hex: '#EAB308' },
+    ];
+    const SHAVINGS_OPTIONS = ["Bílá", "Hnědá", "Růžová"];
+    const DRIP_OPTIONS = ["Tmavá čokoláda", "Bílá čokoláda"];
+    const ROUND_SIZES = ["26", "24", "22", "18", "16", "14"]; 
+    const SQUARE_SIZES = ["28", "24", "20", "16"];
+    const RECTANGLE_SIZES = ["60x40", "40x30", "Jiné"];
+    const HEART_SIZES = ["24", "18", "16"];
+
+    // --- FUNKCE AI ---
+    const fileToGenerativePart = async (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    };
+
+    const analyzeCakeImage = async (file) => {
+      try {
+        if (!API_KEY || API_KEY.includes("ZDE_VLOZTE")) { console.warn("API Key missing"); return {}; }
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
+        const base64Data = await fileToGenerativePart(file);
+        const prompt = "Analyze this cake image for a custom order form. 1. Identify shape (Round, Rectangle, Square, Heart). 2. Identify dominant color hex. 3. Write a short poetic description in Czech. Return JSON.";
         
-        const CakeShape = {
-          ROUND: 'Kulatý',
-          RECTANGLE: 'Obdélník',
-          SQUARE: 'Čtverec',
-          HEART: 'Srdíčko',
-        };
+        const response = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: { parts: [{ inlineData: { mimeType: file.type, data: base64Data } }, { text: prompt }] },
+          config: { responseMimeType: "application/json" }
+        });
+        
+        const data = JSON.parse(response.text());
+        let mapShape = undefined;
+        if (data.shape === "Round") mapShape = CakeShape.ROUND;
+        if (data.shape === "Rectangle") mapShape = CakeShape.RECTANGLE;
+        if (data.shape === "Square") mapShape = CakeShape.SQUARE;
+        if (data.shape === "Heart") mapShape = CakeShape.HEART;
+        
+        return { suggestedShape: mapShape, suggestedColor: data.hexColor, description: data.description };
+      } catch (e) { console.error(e); return {}; }
+    };
 
-        const FillingType = {
-          RASPBERRY: 'Malinová',
-          CHOCOLATE: 'Čokoládová',
-          CHERRY: 'Višňová',
-          BLUEBERRY: 'Borůvková',
-          PISTACHIO: 'Pistáciová',
-          WALNUT: 'Ořechová',
-          APRICOT: 'Meruňková',
-          MANGO_PASSION: 'Mango-maracuja',
-          VANILLA: 'Vanilková',
-        };
-
-        const SpongeType = {
-          CHOCOLATE: 'Čokoládový',
-          VANILLA: 'Vanilkový',
-          WALNUT: 'Ořechový',
-          MOSS: 'Mechový',
-          RED_VELVET: 'Red-Velvet',
-        };
-
-        const SurfaceType = {
-          CREAM: 'Krémový',
-          CREAM_DRIP: 'Krémový a stékaná čokoláda',
-          MARZIPAN: 'Marcipánový',
-          CHOCO_SHAVINGS: 'Čoko-hobliny',
-          EDIBLE_PRINT: 'Jedlý tisk',
-          OTHER: 'Jiné',
-        };
-
-        const LOCATIONS = [
-          { id: 'petrvald', name: 'Petřvald', address: 'Šenovská 1', phone: '778 157 857', type: 'store' },
-          { id: 'karvina', name: 'Karviná', address: 'Tř. Těreškovové 2233/28', phone: '778 157 867', type: 'store' },
-          { id: 'ostrava', name: 'Ostrava Zábřeh', address: 'Výškovická 116A', phone: '775 271 101', type: 'store' },
-          { id: 'pist', name: 'Píšť (Výrobna)', address: 'Opavská 218/101', phone: '602 323 788', type: 'factory' }
-        ];
-
-        const CZECH_HOLIDAYS = ["01-01", "01-05", "08-05", "05-07", "06-07", "28-09", "28-10", "17-11", "24-12", "25-12", "26-12"];
-        const SHAPES = Object.values(CakeShape);
-        const FILLINGS = Object.values(FillingType);
-        const SPONGES = Object.values(SpongeType);
-        const SURFACES = Object.values(SurfaceType);
-
-        const CAKE_COLORS = [
-          { name: 'Bílá', hex: '#FFFFFF' },
-          { name: 'Šedá', hex: '#9CA3AF' },
-          { name: 'Černá', hex: '#000000' },
-          { name: 'Růžová', hex: '#F472B6' },
-          { name: 'Červená', hex: '#EF4444' },
-          { name: 'Hnědá', hex: '#854d0e' },
-          { name: 'Oranžová', hex: '#F97316' },
-          { name: 'Modrá', hex: '#3B82F6' },
-          { name: 'Fialová', hex: '#A855F7' },
-          { name: 'Zelená', hex: '#22C55E' },
-          { name: 'Žlutá', hex: '#EAB308' },
-        ];
-
-        const SHAVINGS_OPTIONS = ["Bílá", "Hnědá", "Růžová"];
-        const DRIP_OPTIONS = ["Tmavá čokoláda", "Bílá čokoláda"];
-
-        const ROUND_SIZES = ["26", "24", "22", "18", "16", "14"]; 
-        const SQUARE_SIZES = ["28", "24", "20", "16"];
-        const RECTANGLE_SIZES = ["60x40", "40x30", "Jiné"];
-        const HEART_SIZES = ["24", "18", "16"];
-
-        // --- SERVICES (Merged from geminiService.ts) ---
-
-        const fileToGenerativePart = async (file) => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              const base64String = reader.result;
-              const base64Data = base64String.split(',')[1];
-              resolve(base64Data);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        };
-
-        const analyzeCakeImage = async (file) => {
-          try {
-            if (!API_KEY || API_KEY.includes("ZDE_VLOZTE")) {
-              console.warn("API Key not set");
-              return {};
-            }
-
-            const ai = new GoogleGenAI({ apiKey: API_KEY });
-            const model = "gemini-2.5-flash";
-            
-            const base64Data = await fileToGenerativePart(file);
-            const prompt = `Analyze this cake image for a custom order form. 
-            1. Identify the shape (Round, Rectangle, Square, Heart).
-            2. Identify the dominant color of the surface (return a Hex code).
-            3. Write a very short, 1-sentence poetic description of the cake in Czech language.
-            Return JSON.`;
-
-            const response = await ai.models.generateContent({
-              model: model,
-              contents: {
-                parts: [
-                  { inlineData: { mimeType: file.type, data: base64Data } },
-                  { text: prompt }
-                ]
-              },
-              config: {
-                responseMimeType: "application/json"
-              }
-            });
-
-            const text = response.text();
-            if (!text) return {};
-            const data = JSON.parse(text);
-            
-            let mapShape = undefined;
-            if (data.shape === "Round") mapShape = CakeShape.ROUND;
-            if (data.shape === "Rectangle") mapShape = CakeShape.RECTANGLE;
-            if (data.shape === "Square") mapShape = CakeShape.SQUARE;
-            if (data.shape === "Heart") mapShape = CakeShape.HEART;
-
-            return {
-              suggestedShape: mapShape,
-              suggestedColor: data.hexColor,
-              description: data.description
-            };
-          } catch (error) {
-            console.error("Gemini analysis failed:", error);
-            return {};
-          }
-        };
-
-        // --- COMPONENTS ---
-
-        const Steps = ({ currentStep, totalSteps }) => {
-          return (
-            <div className="w-full py-6">
-              <div className="flex items-center justify-center space-x-2">
-                {Array.from({ length: totalSteps }).map((_, idx) => {
-                  const stepNum = idx + 1;
-                  const isActive = stepNum === currentStep;
-                  const isCompleted = stepNum < currentStep;
-
-                  return (
-                    <React.Fragment key={stepNum}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${isActive ? 'bg-brand-600 text-white scale-110 shadow-lg' : isCompleted ? 'bg-brand-300 text-brand-900' : 'bg-gray-200 text-gray-400'}`}>
-                        {isCompleted ? '✓' : stepNum}
-                      </div>
-                      {stepNum < totalSteps && (
-                        <div className={`h-1 w-8 sm:w-16 rounded transition-all duration-300 ${isCompleted ? 'bg-brand-300' : 'bg-gray-200'}`} />
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-              <div className="text-center mt-2 text-brand-800 font-serif font-medium">
-                {currentStep === 1 && "Předloha a Základ"}
-                {currentStep === 2 && "Příchuť a Vzhled"}
-                {currentStep === 3 && "Detaily"}
-                {currentStep === 4 && "Vyzvednutí"}
-                {currentStep === 5 && "Souhrn"}
-              </div>
-            </div>
-          );
-        };
-
-        const Calendar = ({ selectedDate, onSelect }) => {
-          const [viewDate, setViewDate] = useState(new Date());
-          const MONTHS = ["Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec"];
-          const DAYS = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
-
-          const minDate = useMemo(() => {
-            const d = new Date();
-            d.setDate(d.getDate() + 7);
-            d.setHours(0, 0, 0, 0);
-            return d;
-          }, []);
-
-          const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
-          
-          const isHoliday = (date) => {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            return CZECH_HOLIDAYS.includes(`${day}-${month}`);
-          };
-
-          const isDisabled = (date) => {
-            if (date < minDate) return true;
-            if (isHoliday(date)) return true;
-            return false;
-          };
-
-          const renderDays = () => {
-            const year = viewDate.getFullYear();
-            const month = viewDate.getMonth();
-            const daysInMonth = getDaysInMonth(year, month);
-            const firstDayOfMonth = new Date(year, month, 1).getDay();
-            const days = [];
-            
-            for (let i = 0; i < firstDayOfMonth; i++) {
-              days.push(<div key={`empty-${i}`} className="p-2"></div>);
-            }
-
-            for (let d = 1; d <= daysInMonth; d++) {
-              const currentDay = new Date(year, month, d);
-              const disabled = isDisabled(currentDay);
-              const isSelected = selectedDate && selectedDate.getDate() === d && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
-
-              days.push(
-                <button
-                  key={d}
-                  disabled={disabled}
-                  onClick={() => onSelect(currentDay)}
-                  className={`p-2 w-full aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-colors ${isSelected ? 'bg-brand-600 text-white shadow-md' : ''} ${!isSelected && !disabled ? 'hover:bg-brand-100 text-gray-700' : ''} ${disabled ? 'text-gray-300 cursor-not-allowed bg-gray-50' : ''}`}
-                  title={isHoliday(currentDay) ? "Svátek" : ""}
-                >
-                  {d}
-                </button>
-              );
-            }
-            return days;
-          };
-
-          const changeMonth = (offset) => {
-            const newDate = new Date(viewDate);
-            newDate.setMonth(newDate.getMonth() + offset);
-            setViewDate(newDate);
-          };
-
-          return (
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-brand-100 max-w-sm mx-auto">
-              <div className="flex justify-between items-center mb-4">
-                <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-gray-100 rounded text-brand-700">&lt;</button>
-                <span className="font-serif font-bold text-lg text-brand-900">{MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}</span>
-                <button onClick={() => changeMonth(1)} className="p-1 hover:bg-gray-100 rounded text-brand-700">&gt;</button>
-              </div>
-              <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wide">
-                {DAYS.map(d => <div key={d}>{d}</div>)}
-              </div>
-              <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
-              <div className="mt-4 text-xs text-gray-500 text-center">* Nejdřívější datum vyzvednutí je za 7 dní. Svátky jsou blokovány.</div>
-            </div>
-          );
-        };
-
-        // --- APP LOGIC ---
-
-        const INITIAL_ORDER = {
-          tiers: 1,
-          tierSizes: ["24"],
-          shape: CakeShape.ROUND,
-          filling: FillingType.RASPBERRY,
-          sponge: SpongeType.VANILLA,
-          surface: SurfaceType.CREAM,
-          inscription: '',
-          specifications: '',
-          quantity: 1,
-          pickupDate: null,
-          pickupLocationId: LOCATIONS[0].id,
-          images: [],
-          customerName: '',
-          customerEmail: '',
-          customerPhone: ''
-        };
-
-        function App() {
-          const [step, setStep] = useState(1);
-          const [order, setOrder] = useState(INITIAL_ORDER);
-          const [isAnalyzing, setIsAnalyzing] = useState(false);
-          const [aiAnalysisResult, setAiAnalysisResult] = useState(null);
-
-          const handleFileChange = async (e) => {
-            try {
-              if (e.target.files && e.target.files.length > 0) {
-                const newFiles = Array.from(e.target.files);
-                const currentCount = order.images.length;
-                const remainingSlots = 5 - currentCount;
-                if (remainingSlots <= 0) return;
-
-                const filesToProcess = newFiles.slice(0, remainingSlots);
-                const newImages = filesToProcess.map(file => ({
-                  id: Math.random().toString(36).substring(7),
-                  file,
-                  previewUrl: URL.createObjectURL(file)
-                }));
-
-                setOrder(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
-
-                if (newImages.length > 0 && !isAnalyzing) {
-                  setIsAnalyzing(true);
-                  setAiAnalysisResult("Analyzuji obrázek...");
-                  try {
-                    const analysis = await analyzeCakeImage(newImages[0].file);
-                    if (analysis.suggestedShape) handleShapeChange(analysis.suggestedShape);
-                    if (analysis.description) setAiAnalysisResult(analysis.description);
-                  } catch (analysisError) {
-                    console.warn("AI analysis failed silently", analysisError);
-                    setAiAnalysisResult(null);
-                  } finally {
-                    setIsAnalyzing(false);
-                  }
-                }
-              }
-            } catch (error) {
-              console.error("Error handling file upload:", error);
-              alert("Nepodařilo se nahrát obrázek.");
-            } finally {
-              e.target.value = '';
-            }
-          };
-
-          const handleEdiblePrintUpload = (e) => {
-             if (e.target.files && e.target.files.length > 0) {
-                const file = e.target.files[0];
-                const newImage = {
-                   id: Math.random().toString(36).substring(7),
-                   file,
-                   previewUrl: URL.createObjectURL(file)
-                };
-                setOrder(prev => ({...prev, ediblePrintImage: newImage}));
-                e.target.value = '';
-             }
-          }
-
-          const removeEdiblePrint = () => {
-             if(order.ediblePrintImage) {
-                URL.revokeObjectURL(order.ediblePrintImage.previewUrl);
-                setOrder(prev => ({...prev, ediblePrintImage: undefined}));
-             }
-          }
-
-          const removeImage = (idToRemove) => {
-            setOrder(prev => {
-              const imageToRemove = prev.images.find(img => img.id === idToRemove);
-              if (imageToRemove) URL.revokeObjectURL(imageToRemove.previewUrl);
-              return { ...prev, images: prev.images.filter(img => img.id !== idToRemove) };
-            });
-            if (order.images.length <= 1) setAiAnalysisResult(null);
-          };
-
-          const updateOrder = (updates) => setOrder(prev => ({ ...prev, ...updates }));
-
-          const getSizesForShape = (shape) => {
-            switch (shape) {
-              case CakeShape.ROUND: return ROUND_SIZES;
-              case CakeShape.SQUARE: return SQUARE_SIZES;
-              case CakeShape.RECTANGLE: return RECTANGLE_SIZES;
-              case CakeShape.HEART: return HEART_SIZES;
-              default: return ROUND_SIZES;
-            }
-          };
-
-          const handleShapeChange = (shape) => {
-            const defaultSize = getSizesForShape(shape)[0];
-            const newTierSizes = Array(order.tiers).fill(defaultSize);
-            if (order.tiers > 1 && shape !== CakeShape.RECTANGLE) {
-               const available = getSizesForShape(shape);
-               for(let i=0; i<order.tiers; i++) {
-                 if (i < available.length) newTierSizes[i] = available[i];
-               }
-            }
-            setOrder(prev => ({ ...prev, shape, tierSizes: newTierSizes, customSizeNote: '' }));
-          };
-
-          const handleTierCountChange = (count) => {
-            const currentSizes = [...order.tierSizes];
-            const available = getSizesForShape(order.shape);
-            if (count > currentSizes.length) {
-               while(currentSizes.length < count) {
-                 const lastSize = currentSizes[currentSizes.length - 1];
-                 const lastIndex = available.indexOf(lastSize);
-                 const nextSize = (lastIndex !== -1 && lastIndex + 1 < available.length) ? available[lastIndex + 1] : available[available.length - 1];
-                 currentSizes.push(nextSize);
-               }
-            } else {
-               currentSizes.length = count;
-            }
-            updateOrder({ tiers: count, tierSizes: currentSizes });
-          };
-
-          const handleSizeChange = (tierIndex, newVal) => {
-            const newSizes = [...order.tierSizes];
-            newSizes[tierIndex] = newVal;
-            if (order.shape !== CakeShape.RECTANGLE) {
-                const available = getSizesForShape(order.shape);
-                for (let i = tierIndex + 1; i < newSizes.length; i++) {
-                    const prevSizeVal = parseInt(newSizes[i-1]);
-                    const currSizeVal = parseInt(newSizes[i]);
-                    if (!isNaN(prevSizeVal) && !isNaN(currSizeVal) && currSizeVal >= prevSizeVal) {
-                        const prevIndexInList = available.indexOf(newSizes[i-1]);
-                        if (prevIndexInList !== -1 && prevIndexInList + 1 < available.length) {
-                            newSizes[i] = available[prevIndexInList + 1];
-                        }
-                    }
-                }
-            }
-            updateOrder({ tierSizes: newSizes });
-          };
-
-          const getAvailableOptionsForTier = (tierIndex) => {
-            const allSizes = getSizesForShape(order.shape);
-            if (tierIndex === 0 || order.shape === CakeShape.RECTANGLE) return allSizes;
-            const sizeAbove = parseInt(order.tierSizes[tierIndex - 1]);
-            if (isNaN(sizeAbove)) return allSizes;
-            return allSizes.filter(s => parseInt(s) < sizeAbove);
-          };
-
-          const isStepValid = () => {
-            if (step === 2) {
-                if (!order.filling || !order.sponge || !order.surface) return false;
-                if (order.surface === SurfaceType.MARZIPAN && !order.marzipanColor) return false;
-                if (order.surface === SurfaceType.CREAM && !order.creamColor) return false;
-                if (order.surface === SurfaceType.CREAM_DRIP && (!order.creamColor || !order.dripType)) return false;
-                if (order.surface === SurfaceType.CHOCO_SHAVINGS && !order.shavingsType) return false;
-                if (order.surface === SurfaceType.EDIBLE_PRINT && !order.ediblePrintImage) return false;
-            }
-            if (step === 4 && !order.pickupDate) return false;
-            return true;
-          };
-
-          const nextStep = () => isStepValid() && setStep(s => Math.min(s + 1, 5));
-          const prevStep = () => setStep(s => Math.max(s - 1, 1));
-          
-          const getColorHex = (name) => {
-            const c = CAKE_COLORS.find(c => c.name === name);
-            return c ? c.hex : 'transparent';
-          };
-
-          const handleSubmitOrder = () => {
-             let surfaceDetails = order.surface;
-             if (order.surface === SurfaceType.MARZIPAN) surfaceDetails += ` (Barva: ${order.marzipanColor || 'Neuvedeno'})`;
-             if (order.surface === SurfaceType.CREAM) surfaceDetails += ` (Barva: ${order.creamColor || 'Neuvedeno'})`;
-             if (order.surface === SurfaceType.CREAM_DRIP) surfaceDetails += ` (Krém: ${order.creamColor || 'Neuvedeno'}, Stékání: ${order.dripType || 'Neuvedeno'})`;
-             if (order.surface === SurfaceType.CHOCO_SHAVINGS) surfaceDetails += ` (Typ: ${order.shavingsType || 'Neuvedeno'})`;
-             if (order.surface === SurfaceType.EDIBLE_PRINT) surfaceDetails += ` (POZOR: Obrázek pro tisk zákazník zašle v odpovědi na tento email)`;
-             if (order.surface === SurfaceType.OTHER) surfaceDetails += ` (Pozn: ${order.surfaceOtherNote})`;
-
-             const subject = `Poptávka dortu - ${order.customerName}`;
-             const body = `NOVÁ POPTÁVKA DORTU\n---------------------\nZákazník: ${order.customerName}\nTelefon: ${order.customerPhone}\nEmail: ${order.customerEmail}\n\nDatum vyzvednutí: ${order.pickupDate ? order.pickupDate.toLocaleDateString('cs-CZ') : 'Nevybráno'}\nMísto: ${LOCATIONS.find(l => l.id === order.pickupLocationId)?.name}\n\nDORT\n----\nTvar: ${order.shape}\nPatra: ${order.tiers}\nRozměry: ${order.tierSizes.join(' / ')} cm ${order.customSizeNote ? `(Pozn: ${order.customSizeNote})` : ''}\n\nKorpus: ${order.sponge}\nNáplň: ${order.filling}\nPovrch: ${surfaceDetails}\n${order.surface === SurfaceType.EDIBLE_PRINT ? '\n!!! DŮLEŽITÉ !!!\nZákazník zvolil jedlý tisk. Pokud není obrázek přiložen v odpovědi, prosím vyžádejte si ho.' : ''}\n\nNápis: ${order.inscription}\nMnožství: ${order.quantity} ks\n\nPoznámky:\n${order.specifications}`;
-             
-             window.location.href = `mailto:cukrarna.pist@seznam.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-          };
-
-          const renderStep1 = () => (
-            <div className="space-y-6 animate-fade-in">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
-                <h2 className="text-2xl font-serif text-brand-900 mb-4 flex items-center">
-                  <Camera className="mr-2 text-brand-500" /> Předloha
-                </h2>
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-bold text-gray-700">Fotografie předlohy</label>
-                    <span className="text-xs text-gray-500 font-medium">Nahráno {order.images.length}/5</span>
-                  </div>
-                  <div className="space-y-4">
-                    {order.images.length === 0 ? (
-                      <div className="mt-1">
-                        <label className="flex flex-col justify-center px-6 pt-10 pb-10 border-2 border-brand-200 border-dashed rounded-xl hover:bg-brand-50 transition-colors cursor-pointer group w-full">
-                          <div className="space-y-1 text-center">
-                            <Upload className="mx-auto h-12 w-12 text-brand-400 group-hover:scale-110 transition-transform" />
-                            <div className="flex text-sm text-gray-600 justify-center">
-                              <span className="relative font-medium text-brand-600 hover:text-brand-500">Nahrát fotografie</span>
-                            </div>
-                            <p className="text-xs text-gray-500">PNG, JPG do 10MB (Max 5 souborů)</p>
-                          </div>
-                          <input type="file" className="sr-only" accept="image/*" multiple onChange={handleFileChange} />
-                        </label>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {order.images.map((img) => (
-                          <div key={img.id} className="relative group aspect-square rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                            <img src={img.previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                            <button onClick={(e) => { e.preventDefault(); removeImage(img.id); }} className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5 text-gray-500 shadow-sm hover:text-red-500 hover:bg-white transition-colors"><X size={16} /></button>
-                          </div>
-                        ))}
-                        {order.images.length < 5 && (
-                           <label className="border-2 border-brand-200 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-brand-50 transition-colors aspect-square text-brand-400 hover:text-brand-600">
-                              <Plus size={32} />
-                              <span className="text-xs font-bold mt-2">Přidat další</span>
-                              <input type="file" className="sr-only" accept="image/*" multiple onChange={handleFileChange} />
-                           </label>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {isAnalyzing && <div className="mt-4 flex items-center justify-center text-brand-600 bg-brand-50 p-3 rounded-lg"><Loader2 className="animate-spin mr-2 h-5 w-5" /> Umělá inteligence analyzuje váš dort...</div>}
-                  {aiAnalysisResult && !isAnalyzing && order.images.length > 0 && <div className="mt-4 bg-gradient-to-r from-brand-50 to-white p-4 rounded-lg border border-brand-100"><p className="text-brand-800 italic font-serif text-center">"{aiAnalysisResult}"</p></div>}
+    // --- KOMPONENTY ---
+    const Steps = ({ currentStep, totalSteps }) => (
+      <div className="w-full py-6">
+        <div className="flex items-center justify-center space-x-2">
+          {Array.from({ length: totalSteps }).map((_, idx) => {
+            const stepNum = idx + 1;
+            const isActive = stepNum === currentStep;
+            const isCompleted = stepNum < currentStep;
+            return (
+              <React.Fragment key={stepNum}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${isActive ? 'bg-brand-600 text-white scale-110 shadow-lg' : isCompleted ? 'bg-brand-300 text-brand-900' : 'bg-gray-200 text-gray-400'}`}>
+                  {isCompleted ? '✓' : stepNum}
                 </div>
-              </div>
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
-                 <h2 className="text-2xl font-serif text-brand-900 mb-6">Tvar a Velikost</h2>
-                 <div className="mb-6">
-                  <label className="block text-sm font-bold text-gray-700 mb-3">Tvar dortu</label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {SHAPES.map((shape) => (
-                      <button key={shape} onClick={() => handleShapeChange(shape)} className={`py-3 px-2 rounded-xl border text-sm font-medium transition-all ${order.shape === shape ? 'bg-brand-600 text-white shadow-md border-brand-600 transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:border-brand-300'}`}>{shape}</button>
-                    ))}
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Počet pater</label>
-                    <div className="flex space-x-2">
-                      {[1, 2, 3].map((num) => (
-                        <button key={num} onClick={() => handleTierCountChange(num)} className={`flex-1 py-3 rounded-lg border-2 font-bold transition-all ${order.tiers === num ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-500 hover:border-brand-200'}`}>{num} {num === 1 ? 'patro' : num < 5 ? 'patra' : 'pater'}</button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                     <label className="block text-sm font-bold text-gray-700 mb-2">{order.shape === CakeShape.ROUND ? 'Průměry (cm)' : order.shape === CakeShape.SQUARE ? 'Šířka (cm)' : order.shape === CakeShape.HEART ? 'Velikost (cm)' : 'Rozměry (cm)'}</label>
-                     <div className="space-y-3">
-                       {order.tierSizes.map((size, idx) => (
-                           <div key={idx} className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                             <div className="flex items-center justify-between mb-1"><span className="text-sm text-gray-800 font-bold">{idx === 0 ? '1. patro (spodní)' : `${idx + 1}. patro (menší)`}</span></div>
-                             <select value={size} onChange={(e) => handleSizeChange(idx, e.target.value)} className="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5">
-                                {getAvailableOptionsForTier(idx).map(s => <option key={s} value={s}>{s}</option>)}
-                             </select>
-                             {order.shape === CakeShape.RECTANGLE && size === 'Jiné' && (
-                               <div className="mt-2 animate-fade-in">
-                                  <input type="text" placeholder="Např. 50x30 (Max 60x40)" value={order.customSizeNote || ''} onChange={(e) => updateOrder({ customSizeNote: e.target.value })} className="w-full text-sm p-2 border border-gray-300 rounded focus:ring-brand-500 focus:border-brand-500" />
-                                  <p className="text-xs text-brand-600 mt-1">Maximální rozměr je 60x40 cm.</p>
-                               </div>
-                             )}
-                           </div>
-                       ))}
-                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
+                {stepNum < totalSteps && <div className={`h-1 w-8 sm:w-16 rounded transition-all duration-300 ${isCompleted ? 'bg-brand-300' : 'bg-gray-200'}`} />}
+              </React.Fragment>
+            );
+          })}
+        </div>
+        <div className="text-center mt-2 text-brand-800 font-serif font-medium">
+          {currentStep === 1 && "Předloha a Základ"} {currentStep === 2 && "Příchuť a Vzhled"}
+          {currentStep === 3 && "Detaily"} {currentStep === 4 && "Vyzvednutí"} {currentStep === 5 && "Souhrn"}
+        </div>
+      </div>
+    );
 
-          const renderStep2 = () => (
-            <div className="space-y-6 animate-fade-in">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
-                <h2 className="text-2xl font-serif text-brand-900 mb-6">Příchuť a Povrch</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Náplň</label>
-                    <select value={order.filling} onChange={(e) => updateOrder({ filling: e.target.value })} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-gray-50">{FILLINGS.map(f => <option key={f} value={f}>{f}</option>)}</select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">Korpus</label>
-                    <select value={order.sponge} onChange={(e) => updateOrder({ sponge: e.target.value })} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-gray-50">{SPONGES.map(s => <option key={s} value={s}>{s}</option>)}</select>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-3">Povrchová úprava</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                     {SURFACES.map(surface => (
-                       <label key={surface} className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${order.surface === surface ? 'bg-brand-50 border-brand-500 ring-1 ring-brand-500' : 'hover:bg-gray-50 border-gray-200'}`}>
-                         <input type="radio" name="surface" value={surface} checked={order.surface === surface} onChange={() => updateOrder({ surface })} className="h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300" />
-                         <span className="ml-2 text-sm text-gray-700">{surface}</span>
-                       </label>
-                     ))}
-                  </div>
-                  {order.surface === SurfaceType.MARZIPAN && (
-                    <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu marcipánu *</label>
-                      <div className="flex flex-wrap gap-2">
-                        {CAKE_COLORS.map(color => (
-                          <button key={color.name} onClick={() => updateOrder({ marzipanColor: color.name })} className={`w-10 h-10 rounded-full border-2 shadow-sm transition-transform hover:scale-105 flex items-center justify-center ${order.marzipanColor === color.name ? 'border-gray-800 scale-110 ring-2 ring-white' : 'border-gray-200'}`} style={{ backgroundColor: color.hex }}>
-                             {order.marzipanColor === color.name && <span className={`text-xs font-bold ${['Bílá', 'Žlutá'].includes(color.name) ? 'text-black' : 'text-white'}`}>✓</span>}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-sm text-brand-800 font-medium">Vybráno: {order.marzipanColor || <span className="text-gray-400 italic">Nevybráno</span>}</p>
-                    </div>
-                  )}
-                  {(order.surface === SurfaceType.CREAM || order.surface === SurfaceType.CREAM_DRIP) && (
-                    <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu krému *</label>
-                      <div className="flex flex-wrap gap-2">
-                        {CAKE_COLORS.map(color => (
-                          <button key={color.name} onClick={() => updateOrder({ creamColor: color.name })} className={`w-10 h-10 rounded-full border-2 shadow-sm transition-transform hover:scale-105 flex items-center justify-center ${order.creamColor === color.name ? 'border-gray-800 scale-110 ring-2 ring-white' : 'border-gray-200'}`} style={{ backgroundColor: color.hex }}>
-                             {order.creamColor === color.name && <span className={`text-xs font-bold ${['Bílá', 'Žlutá'].includes(color.name) ? 'text-black' : 'text-white'}`}>✓</span>}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="mt-2 text-sm text-brand-800 font-medium">Vybráno: {order.creamColor || <span className="text-gray-400 italic">Nevybráno</span>}</p>
-                    </div>
-                  )}
-                  {order.surface === SurfaceType.CREAM_DRIP && (
-                    <div className="mt-2 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Druh stékané čokolády *</label>
-                      <div className="flex gap-4">
-                         {DRIP_OPTIONS.map(opt => (
-                            <label key={opt} className="flex items-center cursor-pointer">
-                               <input type="radio" name="dripType" value={opt} checked={order.dripType === opt} onChange={() => updateOrder({ dripType: opt })} className="text-brand-600 focus:ring-brand-500" />
-                               <span className="ml-2 text-sm text-gray-700">{opt}</span>
-                            </label>
-                         ))}
-                      </div>
-                    </div>
-                  )}
-                  {order.surface === SurfaceType.CHOCO_SHAVINGS && (
-                    <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Barva čoko-hoblin *</label>
-                      <div className="flex gap-4">
-                         {SHAVINGS_OPTIONS.map(opt => (
-                            <label key={opt} className="flex items-center cursor-pointer">
-                               <input type="radio" name="shavingsType" value={opt} checked={order.shavingsType === opt} onChange={() => updateOrder({ shavingsType: opt })} className="text-brand-600 focus:ring-brand-500" />
-                               <span className="ml-2 text-sm text-gray-700">{opt}</span>
-                            </label>
-                         ))}
-                      </div>
-                    </div>
-                  )}
-                  {order.surface === SurfaceType.EDIBLE_PRINT && (
-                    <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-                       <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center"><Printer className="w-4 h-4 mr-2" /> Nahrajte obrázek pro tisk *</label>
-                       {!order.ediblePrintImage ? (
-                         <>
-                           <label className="border-2 border-brand-200 border-dashed rounded-xl flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-white transition-colors bg-white">
-                              <Upload className="h-8 w-8 text-brand-400 mb-2" />
-                              <span className="text-sm font-medium text-brand-600">Vybrat soubor</span>
-                              <input type="file" className="sr-only" accept="image/*" onChange={handleEdiblePrintUpload} />
-                           </label>
-                           <p className="text-xs text-red-500 mt-2 font-medium">Pro pokračování je nutné nahrát obrázek.</p>
-                         </>
-                       ) : (
-                         <div className="relative group aspect-video rounded-xl overflow-hidden shadow-sm border border-gray-200 bg-white">
-                            <img src={order.ediblePrintImage.previewUrl} alt="Edible print" className="w-full h-full object-contain" />
-                            <button onClick={(e) => { e.preventDefault(); removeEdiblePrint(); }} className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5 text-gray-500 shadow-sm hover:text-red-500 hover:bg-white transition-colors"><X size={16} /></button>
-                         </div>
-                       )}
-                    </div>
-                  )}
-                  {order.surface === SurfaceType.OTHER && (
-                    <div className="mt-4 animate-fade-in">
-                      <label className="block text-sm font-bold text-gray-700 mb-2">Poznámka k povrchu</label>
-                      <input type="text" value={order.surfaceOtherNote || ''} onChange={(e) => updateOrder({ surfaceOtherNote: e.target.value })} placeholder="Specifikujte prosím..." className="w-full p-3 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-
-          const renderStep3 = () => (
-             <div className="space-y-6 animate-fade-in bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
-               <h2 className="text-2xl font-serif text-brand-900 mb-6">Detaily a Ozdoby</h2>
-               <div className="mb-6">
-                 <label className="block text-sm font-bold text-gray-700 mb-2">Nápis na dort</label>
-                 <input type="text" value={order.inscription} onChange={(e) => updateOrder({ inscription: e.target.value })} placeholder="Např. Tomášek 5 let" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" />
-               </div>
-               <div className="mb-6">
-                 <label className="block text-sm font-bold text-gray-700 mb-2">Další specifikace a detaily</label>
-                 <textarea rows={4} value={order.specifications} onChange={(e) => updateOrder({ specifications: e.target.value })} placeholder="Zvláštní požadavky na zdobení, alergie, atd..." className="w-full p-3 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" />
-               </div>
-               <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Množství</label>
-                  <div className="flex items-center space-x-4">
-                     <button onClick={() => updateOrder({ quantity: Math.max(1, order.quantity - 1) })} className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold">-</button>
-                     <span className="text-xl font-bold text-brand-900">{order.quantity} ks</span>
-                     <button onClick={() => updateOrder({ quantity: Math.min(10, order.quantity + 1) })} className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold">+</button>
-                  </div>
-               </div>
-             </div>
-          );
-
-          const renderStep4 = () => (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
-                <h2 className="text-xl font-serif text-brand-900 mb-4 flex items-center"><CalendarIcon className="mr-2 text-brand-500" /> Datum vyzvednutí</h2>
-                <div className="flex justify-center"><Calendar selectedDate={order.pickupDate} onSelect={(date) => updateOrder({ pickupDate: date })} /></div>
-                {order.pickupDate && <div className="mt-4 text-center p-3 bg-brand-50 text-brand-800 rounded-lg font-medium">Vybráno: {order.pickupDate.toLocaleDateString('cs-CZ')}</div>}
-              </div>
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100 flex flex-col">
-                 <h2 className="text-xl font-serif text-brand-900 mb-4 flex items-center"><MapPin className="mr-2 text-brand-500" /> Místo vyzvednutí</h2>
-                 <div className="space-y-3 flex-1">
-                  {LOCATIONS.map(loc => (
-                    <button key={loc.id} onClick={() => updateOrder({ pickupLocationId: loc.id })} className={`w-full text-left p-4 rounded-xl border transition-all ${order.pickupLocationId === loc.id ? 'border-brand-500 bg-brand-50 shadow-sm ring-1 ring-brand-500' : 'border-gray-200 hover:border-brand-300 bg-white'}`}>
-                      <div className="flex justify-between items-center"><span className="font-bold text-gray-900">{loc.name}</span>{loc.type === 'factory' && <span className="text-xs bg-gray-200 px-2 py-1 rounded text-gray-600">Výrobna</span>}</div>
-                      <div className="text-sm text-gray-600 mt-1">{loc.address}</div>
-                      <div className="text-sm text-brand-600 mt-1 font-medium">{loc.phone}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-
-          const renderStep5 = () => (
-             <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-brand-100">
-                     <h2 className="text-xl font-serif text-brand-900 mb-4 flex items-center"><User className="mr-2 text-brand-500" /> Kontaktní údaje</h2>
-                     <div className="grid grid-cols-1 gap-4">
-                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-1">Jméno a příjmení</label>
-                            <input type="text" value={order.customerName} onChange={(e) => updateOrder({ customerName: e.target.value })} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" placeholder="Jan Novák" />
-                         </div>
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Telefon</label>
-                                <input type="tel" value={order.customerPhone} onChange={(e) => updateOrder({ customerPhone: e.target.value })} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" placeholder="+420 777 123 456" />
-                             </div>
-                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-1">Email</label>
-                                <input type="email" value={order.customerEmail} onChange={(e) => updateOrder({ customerEmail: e.target.value })} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-brand-500 focus:border-brand-500" placeholder="jan.novak@email.cz" />
-                             </div>
-                         </div>
-                     </div>
-                </div>
-
-                <div className="bg-white p-8 rounded-2xl shadow-lg border border-brand-200 relative overflow-hidden">
-                   <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-300 to-brand-600" />
-                   <div className="text-center mb-6"><CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-2" /><h2 className="text-2xl font-serif text-gray-900">Souhrn Poptávky</h2></div>
-                   <div className="space-y-4 divide-y divide-gray-100 text-sm">
-                      {order.images.length > 0 && (
-                        <div className="py-2">
-                          <span className="block text-gray-500 text-xs uppercase font-bold mb-2">Předlohy</span>
-                          <div className="flex gap-2 overflow-x-auto pb-2">{order.images.map(img => <img key={img.id} src={img.previewUrl} className="h-12 w-12 object-cover rounded-lg border border-gray-200" alt="cake preview" />)}</div>
-                        </div>
-                      )}
-                      <div className="py-2 grid grid-cols-2 gap-4">
-                         <div><span className="block text-gray-500 text-xs uppercase font-bold">Tvar a patra</span><span className="font-medium text-gray-900">{order.shape} ({order.tiers}p)</span></div>
-                         <div className="text-right"><span className="block text-gray-500 text-xs uppercase font-bold">Rozměry</span><span className="font-medium text-gray-900">{order.tierSizes.join(' / ')} cm {order.customSizeNote && <span className="block text-xs text-brand-600 font-normal">{order.customSizeNote}</span>}</span></div>
-                      </div>
-                      <div className="py-2 grid grid-cols-2 gap-4">
-                         <div><span className="block text-gray-500 text-xs uppercase font-bold">Chuť</span><div className="font-medium text-gray-900">{order.filling}</div><div className="text-gray-600">{order.sponge} korpus</div></div>
-                         <div className="text-right">
-                            <span className="block text-gray-500 text-xs uppercase font-bold">Povrch</span>
-                            <span className="font-medium text-gray-900">{order.surface}</span>
-                            {order.surface === SurfaceType.MARZIPAN && order.marzipanColor && <div className="flex items-center justify-end gap-1 mt-1"><span className="text-xs text-gray-600">{order.marzipanColor}</span><div className="w-3 h-3 rounded-full border border-gray-200" style={{backgroundColor: getColorHex(order.marzipanColor)}} /></div>}
-                            {(order.surface === SurfaceType.CREAM || order.surface === SurfaceType.CREAM_DRIP) && order.creamColor && <div className="flex items-center justify-end gap-1 mt-1"><span className="text-xs text-gray-600">{order.creamColor}</span><div className="w-3 h-3 rounded-full border border-gray-200" style={{backgroundColor: getColorHex(order.creamColor)}} /></div>}
-                            {order.surface === SurfaceType.EDIBLE_PRINT && order.ediblePrintImage && <div className="mt-1"><img src={order.ediblePrintImage.previewUrl} alt="print" className="h-10 w-auto rounded border border-gray-200 ml-auto" /><div className="text-[10px] text-red-500 mt-1">Nezapomeňte poslat mailem!</div></div>}
-                         </div>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          );
-
-          return (
-            <div className="min-h-screen bg-gradient-to-br from-brand-50 to-white pb-24">
-              <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-100">
-                 <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <h1 className="font-serif text-xl sm:text-2xl font-bold text-brand-800 truncate">Poptávka dortu - Cukrářství Blahutovi</h1>
-                 </div>
-              </nav>
-
-              <main className="max-w-4xl mx-auto px-4 mt-6">
-                <Steps currentStep={step} totalSteps={5} />
-                <div className="mt-8">
-                   {step === 1 && renderStep1()}
-                   {step === 2 && renderStep2()}
-                   {step === 3 && renderStep3()}
-                   {step === 4 && renderStep4()}
-                   {step === 5 && renderStep5()}
-                </div>
-              </main>
-
-              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-40">
-                <div className="max-w-4xl mx-auto flex justify-between items-center gap-4">
-                  <button onClick={prevStep} disabled={step === 1} className={`flex items-center px-4 md:px-6 py-3 rounded-xl font-bold transition-colors ${step === 1 ? 'text-gray-300' : 'text-gray-600 hover:bg-gray-100'}`}><ChevronLeft className="mr-1 h-5 w-5" /> <span className="hidden sm:inline">Zpět</span></button>
-                  {step < 5 ? (
-                     <button onClick={nextStep} disabled={!isStepValid()} className="flex-1 sm:flex-none flex justify-center items-center bg-brand-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-brand-700 hover:shadow-brand-300/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Pokračovat <ChevronRight className="ml-1 h-5 w-5" /></button>
-                  ) : (
-                     <button onClick={handleSubmitOrder} disabled={!order.customerName || !order.customerPhone || !order.customerEmail} className="flex-1 sm:flex-none flex justify-center items-center bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 hover:shadow-green-300/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed">Odeslat poptávku <Mail className="ml-2 h-5 w-5" /></button>
-                  )}
-                </div>
-              </div>
-            </div>
+    const Calendar = ({ selectedDate, onSelect }) => {
+      const [viewDate, setViewDate] = useState(new Date());
+      const minDate = useMemo(() => { const d = new Date(); d.setDate(d.getDate() + 7); d.setHours(0,0,0,0); return d; }, []);
+      
+      const getDaysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+      const isHoliday = (d) => CZECH_HOLIDAYS.includes(`${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}`);
+      const isDisabled = (d) => d < minDate || isHoliday(d);
+      
+      const renderDays = () => {
+        const y = viewDate.getFullYear(), m = viewDate.getMonth();
+        const days = [], firstDay = new Date(y, m, 1).getDay();
+        for(let i=0; i<firstDay; i++) days.push(<div key={`e-${i}`} />);
+        for(let d=1; d<=getDaysInMonth(y, m); d++) {
+          const curr = new Date(y, m, d);
+          const disabled = isDisabled(curr);
+          const sel = selectedDate && selectedDate.toDateString() === curr.toDateString();
+          days.push(
+            <button key={d} disabled={disabled} onClick={() => onSelect(curr)} className={`p-2 rounded-lg text-sm font-medium ${sel ? 'bg-brand-600 text-white' : disabled ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-brand-100'}`}>
+              {d}
+            </button>
           );
         }
+        return days;
+      };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+      return (
+        <div className="bg-white p-4 rounded-xl shadow border border-brand-100 max-w-sm mx-auto">
+          <div className="flex justify-between mb-4 font-bold text-brand-900">
+            <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth()-1)))}>&lt;</button>
+            <span>{viewDate.toLocaleString('cs-CZ', { month: 'long', year: 'numeric' })}</span>
+            <button onClick={() => setViewDate(new Date(viewDate.setMonth(viewDate.getMonth()+1)))}>&gt;</button>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center font-bold text-xs text-gray-500 mb-2">{["Ne","Po","Út","St","Čt","Pá","So"].map(d=><div key={d}>{d}</div>)}</div>
+          <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
+          <div className="mt-2 text-xs text-gray-500 text-center">* Min. 7 dní na přípravu</div>
+        </div>
+      );
+    };
+
+    // --- HLAVNÍ APLIKACE ---
+    function App() {
+      const [step, setStep] = useState(1);
+      const [order, setOrder] = useState({
+        tiers: 1, tierSizes: ["24"], shape: CakeShape.ROUND, filling: FillingType.RASPBERRY, sponge: SpongeType.VANILLA,
+        surface: SurfaceType.CREAM, inscription: '', specifications: '', quantity: 1, pickupDate: null, pickupLocationId: 'petrvald',
+        images: [], customerName: '', customerEmail: '', customerPhone: ''
+      });
+      const [isAnalyzing, setIsAnalyzing] = useState(false);
+      const [aiResult, setAiResult] = useState(null);
+
+      const updateOrder = (upd) => setOrder(prev => ({ ...prev, ...upd }));
+      
+      const handleFileChange = async (e) => {
+        if (!e.target.files?.length) return;
+        const newFiles = Array.from(e.target.files).slice(0, 5 - order.images.length);
+        const newImgs = newFiles.map(f => ({ id: Math.random().toString(36).substring(7), file: f, previewUrl: URL.createObjectURL(f) }));
+        setOrder(prev => ({ ...prev, images: [...prev.images, ...newImgs] }));
+        
+        if (newImgs.length && !isAnalyzing) {
+          setIsAnalyzing(true);
+          const res = await analyzeCakeImage(newImgs[0].file);
+          if (res.description) setAiResult(res.description);
+          if (res.suggestedShape) handleShapeChange(res.suggestedShape);
+          setIsAnalyzing(false);
+        }
+        e.target.value = '';
+      };
+
+      const handleEdiblePrintUpload = (e) => {
+         if (e.target.files?.[0]) {
+            const f = e.target.files[0];
+            setOrder(p => ({ ...p, ediblePrintImage: { id: Math.random(), file: f, previewUrl: URL.createObjectURL(f) } }));
+         }
+      };
+
+      const handleShapeChange = (shape) => {
+         let sizes = shape === CakeShape.ROUND ? ROUND_SIZES : shape === CakeShape.SQUARE ? SQUARE_SIZES : shape === CakeShape.RECTANGLE ? RECTANGLE_SIZES : HEART_SIZES;
+         setOrder(p => ({ ...p, shape, tierSizes: Array(p.tiers).fill(sizes[0]), customSizeNote: '' }));
+      };
+
+      const getSizes = (idx) => {
+         let opts = order.shape === CakeShape.ROUND ? ROUND_SIZES : order.shape === CakeShape.SQUARE ? SQUARE_SIZES : order.shape === CakeShape.RECTANGLE ? RECTANGLE_SIZES : HEART_SIZES;
+         if (idx === 0 || order.shape === CakeShape.RECTANGLE) return opts;
+         const prev = parseInt(order.tierSizes[idx-1]);
+         return opts.filter(s => parseInt(s) < prev);
+      };
+
+      const isStepValid = () => {
+        if (step === 2) {
+           if (!order.filling || !order.sponge || !order.surface) return false;
+           if (order.surface === SurfaceType.MARZIPAN && !order.marzipanColor) return false;
+           if (order.surface === SurfaceType.CREAM && !order.creamColor) return false;
+           if (order.surface === SurfaceType.CREAM_DRIP && (!order.creamColor || !order.dripType)) return false;
+           if (order.surface === SurfaceType.CHOCO_SHAVINGS && !order.shavingsType) return false;
+           if (order.surface === SurfaceType.EDIBLE_PRINT && !order.ediblePrintImage) return false;
+        }
+        if (step === 4 && !order.pickupDate) return false;
+        return true;
+      };
+
+      const submit = () => {
+        let sd = order.surface;
+        if (order.surface === SurfaceType.MARZIPAN) sd += ` (${order.marzipanColor})`;
+        if (order.surface === SurfaceType.CREAM) sd += ` (${order.creamColor})`;
+        if (order.surface === SurfaceType.CREAM_DRIP) sd += ` (Krém: ${order.creamColor}, Drip: ${order.dripType})`;
+        if (order.surface === SurfaceType.CHOCO_SHAVINGS) sd += ` (${order.shavingsType})`;
+        if (order.surface === SurfaceType.EDIBLE_PRINT) sd += ` (TISK Z PŘÍLOHY)`;
+        
+        const body = `POPTÁVKA DORTU\nKlient: ${order.customerName}, Tel: ${order.customerPhone}, Email: ${order.customerEmail}\n\nVyzvednutí: ${order.pickupDate?.toLocaleDateString()} - ${LOCATIONS.find(l=>l.id===order.pickupLocationId)?.name}\n\nDORT:\nTvar: ${order.shape} (${order.tiers}p)\nRozměry: ${order.tierSizes.join('/')} ${order.customSizeNote||''}\nKorpus: ${order.sponge}, Náplň: ${order.filling}\nPovrch: ${sd} ${order.surfaceOtherNote||''}\nNápis: ${order.inscription}\nPozn: ${order.specifications}`;
+        window.location.href = `mailto:cukrarna.pist@seznam.cz?subject=Poptávka dortu - ${order.customerName}&body=${encodeURIComponent(body)}`;
+      };
+
+      const renderNav = () => (
+         <div className="flex justify-between mt-6 pt-4 border-t">
+           <button onClick={() => setStep(s => Math.max(1, s-1))} disabled={step===1} className="px-4 py-2 rounded text-gray-600 bg-gray-100 disabled:opacity-50">Zpět</button>
+           {step < 5 
+             ? <button onClick={() => isStepValid() && setStep(s => s+1)} disabled={!isStepValid()} className="px-6 py-2 rounded bg-brand-600 text-white font-bold disabled:opacity-50">Pokračovat</button>
+             : <button onClick={submit} disabled={!order.customerName} className="px-6 py-2 rounded bg-green-600 text-white font-bold disabled:opacity-50">Odeslat poptávku</button>
+           }
+         </div>
+      );
+
+      return (
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-brand-100">
+             <h1 className="font-serif text-2xl font-bold text-brand-800">Poptávka dortu</h1>
+             <span className="text-xs font-bold text-brand-400 tracking-widest uppercase">Cukrářství Blahutovi</span>
+          </div>
+
+          <Steps currentStep={step} totalSteps={5} />
+          
+          <div className="mt-6 bg-white p-6 rounded-2xl shadow-sm border border-brand-100 min-h-[400px]">
+             {step === 1 && (
+               <div className="space-y-6">
+                 <div>
+                    <h2 className="text-xl font-bold mb-4 flex items-center"><Camera className="mr-2 text-brand-500"/> Předloha</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                       {order.images.map(img => (
+                          <div key={img.id} className="relative aspect-square"><img src={img.previewUrl} className="w-full h-full object-cover rounded-lg" /><button onClick={()=>setOrder(p=>({...p, images: p.images.filter(i=>i.id!==img.id)}))} className="absolute top-1 right-1 bg-white rounded-full p-1"><X size={14}/></button></div>
+                       ))}
+                       {order.images.length < 5 && <label className="aspect-square border-2 border-dashed border-brand-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-brand-50 text-brand-400"><Plus/><span className="text-xs mt-1">Nahrát</span><input type="file" hidden multiple onChange={handleFileChange}/></label>}
+                    </div>
+                    {isAnalyzing && <div className="mt-2 text-sm text-brand-500 flex items-center"><Loader2 className="animate-spin mr-2 h-4 w-4"/> Analyzuji dort...</div>}
+                    {aiResult && <div className="mt-2 text-sm italic text-gray-600 bg-brand-50 p-2 rounded">"{aiResult}"</div>}
+                 </div>
+                 <hr className="border-brand-100" />
+                 <div>
+                    <h2 className="text-xl font-bold mb-4">Tvar a Velikost</h2>
+                    <div className="flex gap-2 overflow-x-auto pb-2 mb-4">{Object.values(CakeShape).map(s => <button key={s} onClick={()=>handleShapeChange(s)} className={`px-4 py-2 rounded-lg border whitespace-nowrap ${order.shape===s?'bg-brand-600 text-white':'bg-white text-gray-700'}`}>{s}</button>)}</div>
+                    <div className="flex gap-4 items-center mb-4">
+                       <span className="text-sm font-bold">Patra:</span>
+                       {[1,2,3].map(n => <button key={n} onClick={()=>{const sz=Array(n).fill(getSizes(0)[0]); setOrder(p=>({...p, tiers:n, tierSizes:sz}))}} className={`w-10 h-10 rounded-lg font-bold ${order.tiers===n?'bg-brand-100 text-brand-800 border-2 border-brand-500':'bg-gray-50 border'}`}>{n}</button>)}
+                    </div>
+                    <div className="space-y-2">
+                       {order.tierSizes.map((sz, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                             <span className="text-sm w-20">{i+1}. patro:</span>
+                             <select value={sz} onChange={(e)=>{const n=[...order.tierSizes]; n[i]=e.target.value; setOrder(p=>({...p, tierSizes:n}))}} className="p-2 border rounded flex-1">{getSizes(i).map(s=><option key={s} value={s}>{s} cm</option>)}</select>
+                             {order.shape===CakeShape.RECTANGLE && sz==='Jiné' && <input placeholder="Rozměr" value={order.customSizeNote||''} onChange={e=>updateOrder({customSizeNote:e.target.value})} className="p-2 border rounded flex-1"/>}
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+               </div>
+             )}
+
+             {step === 2 && (
+               <div className="space-y-6">
+                 <h2 className="text-xl font-bold flex items-center">Příchuť a Vzhled</h2>
+                 <div className="grid md:grid-cols-2 gap-4">
+                    <label className="block text-sm font-bold">Náplň<select value={order.filling} onChange={e=>updateOrder({filling:e.target.value})} className="w-full p-2 border rounded mt-1">{Object.values(FillingType).map(v=><option key={v} value={v}>{v}</option>)}</select></label>
+                    <label className="block text-sm font-bold">Korpus<select value={order.sponge} onChange={e=>updateOrder({sponge:e.target.value})} className="w-full p-2 border rounded mt-1">{Object.values(SpongeType).map(v=><option key={v} value={v}>{v}</option>)}</select></label>
+                 </div>
+                 <div>
+                    <label className="block text-sm font-bold mb-2">Povrch</label>
+                    <div className="grid grid-cols-2 gap-2">{Object.values(SurfaceType).map(s=><label key={s} className={`p-3 border rounded cursor-pointer flex items-center text-sm ${order.surface===s?'bg-brand-50 border-brand-500':''}`}><input type="radio" checked={order.surface===s} onChange={()=>updateOrder({surface:s})} className="mr-2"/>{s}</label>)}</div>
+                 </div>
+                 
+                 {/* Detail Colors */}
+                 {(order.surface === SurfaceType.MARZIPAN || order.surface === SurfaceType.CREAM || order.surface === SurfaceType.CREAM_DRIP) && (
+                    <div className="bg-brand-50 p-4 rounded">
+                       <span className="text-sm font-bold block mb-2">Barva {order.surface===SurfaceType.MARZIPAN?'marcipánu':'krému'}:</span>
+                       <div className="flex flex-wrap gap-2">{CAKE_COLORS.map(c=><button key={c.name} onClick={()=>updateOrder(order.surface===SurfaceType.MARZIPAN?{marzipanColor:c.name}:{creamColor:c.name})} className={`w-8 h-8 rounded-full border-2 ${order[order.surface===SurfaceType.MARZIPAN?'marzipanColor':'creamColor']===c.name?'border-black scale-110':'border-transparent'}`} style={{backgroundColor:c.hex}} title={c.name}/>)}</div>
+                    </div>
+                 )}
+                 {order.surface === SurfaceType.CREAM_DRIP && (
+                    <div className="bg-brand-50 p-4 rounded mt-2"><span className="text-sm font-bold block mb-2">Druh stékání:</span><div className="flex gap-4">{DRIP_OPTIONS.map(o=><label key={o} className="flex items-center text-sm"><input type="radio" checked={order.dripType===o} onChange={()=>updateOrder({dripType:o})} className="mr-1"/>{o}</label>)}</div></div>
+                 )}
+                 {order.surface === SurfaceType.CHOCO_SHAVINGS && (
+                    <div className="bg-brand-50 p-4 rounded mt-2"><span className="text-sm font-bold block mb-2">Barva hoblin:</span><div className="flex gap-4">{SHAVINGS_OPTIONS.map(o=><label key={o} className="flex items-center text-sm"><input type="radio" checked={order.shavingsType===o} onChange={()=>updateOrder({shavingsType:o})} className="mr-1"/>{o}</label>)}</div></div>
+                 )}
+                 {order.surface === SurfaceType.EDIBLE_PRINT && (
+                    <div className="bg-brand-50 p-4 rounded mt-2 text-center">
+                       <span className="text-sm font-bold block mb-2">Nahrát obrázek pro tisk</span>
+                       {!order.ediblePrintImage ? <input type="file" accept="image/*" onChange={handleEdiblePrintUpload} /> : <div className="text-green-600 text-sm font-bold">✓ Obrázek nahrán</div>}
+                    </div>
+                 )}
+               </div>
+             )}
+
+             {step === 3 && (
+                <div className="space-y-6">
+                   <h2 className="text-xl font-bold">Detaily</h2>
+                   <label className="block text-sm font-bold">Nápis na dort<input value={order.inscription} onChange={e=>updateOrder({inscription:e.target.value})} className="w-full p-2 border rounded mt-1" placeholder="Všechno nejlepší..."/></label>
+                   <label className="block text-sm font-bold">Další specifikace<textarea value={order.specifications} onChange={e=>updateOrder({specifications:e.target.value})} className="w-full p-2 border rounded mt-1" rows="3" placeholder="Alergie, zdobení..."/></label>
+                   <div className="flex items-center gap-4"><span className="font-bold">Množství:</span><button onClick={()=>updateOrder({quantity:Math.max(1,order.quantity-1)})} className="w-8 h-8 bg-gray-200 rounded">-</button><span>{order.quantity} ks</span><button onClick={()=>updateOrder({quantity:order.quantity+1})} className="w-8 h-8 bg-gray-200 rounded">+</button></div>
+                </div>
+             )}
+
+             {step === 4 && (
+                <div className="grid md:grid-cols-2 gap-6">
+                   <div><h2 className="text-xl font-bold mb-4 flex items-center"><CalendarIcon className="mr-2 text-brand-500"/> Datum</h2><Calendar selectedDate={order.pickupDate} onSelect={d=>updateOrder({pickupDate:d})} /></div>
+                   <div><h2 className="text-xl font-bold mb-4 flex items-center"><MapPin className="mr-2 text-brand-500"/> Místo</h2><div className="space-y-2">{LOCATIONS.map(l=><button key={l.id} onClick={()=>updateOrder({pickupLocationId:l.id})} className={`w-full text-left p-3 rounded border ${order.pickupLocationId===l.id?'border-brand-500 bg-brand-50':''}`}><div className="font-bold">{l.name}</div><div className="text-xs">{l.address}</div></button>)}</div></div>
+                </div>
+             )}
+
+             {step === 5 && (
+                <div className="space-y-6">
+                   <h2 className="text-xl font-bold flex items-center"><User className="mr-2 text-brand-500"/> Kontaktní údaje</h2>
+                   <div className="grid gap-4">
+                      <input placeholder="Jméno a příjmení" value={order.customerName} onChange={e=>updateOrder({customerName:e.target.value})} className="p-3 border rounded"/>
+                      <div className="grid grid-cols-2 gap-4"><input placeholder="Telefon" value={order.customerPhone} onChange={e=>updateOrder({customerPhone:e.target.value})} className="p-3 border rounded"/><input placeholder="Email" value={order.customerEmail} onChange={e=>updateOrder({customerEmail:e.target.value})} className="p-3 border rounded"/></div>
+                   </div>
+                   <div className="bg-brand-50 p-4 rounded text-sm space-y-2 border border-brand-200">
+                      <h3 className="font-bold text-lg text-brand-800 border-b border-brand-200 pb-2 mb-2">Souhrn</h3>
+                      <div className="flex justify-between"><span>Dort:</span> <span className="font-bold">{order.shape}, {order.tiers} patra</span></div>
+                      <div className="flex justify-between"><span>Příchuť:</span> <span>{order.filling}, {order.sponge}</span></div>
+                      <div className="flex justify-between"><span>Povrch:</span> <span className="font-bold">{order.surface}</span></div>
+                      <div className="flex justify-between"><span>Vyzvednutí:</span> <span>{order.pickupDate?.toLocaleDateString()} ({LOCATIONS.find(l=>l.id===order.pickupLocationId)?.name})</span></div>
+                      {order.surface === SurfaceType.EDIBLE_PRINT && <div className="text-red-500 font-bold text-center pt-2">! Nezapomeňte odeslat obrázek !</div>}
+                   </div>
+                </div>
+             )}
+             
+             {renderNav()}
+          </div>
+        </div>
+      );
+    }
+
+    // Spuštění React aplikace
+    const rootElement = document.getElementById('cake-app-root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+</script>
