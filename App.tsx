@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CakeOrder, CakeShape, FillingType, SpongeType, SurfaceType, Location, CakeImage } from './types';
-import { LOCATIONS, SHAPES, FILLINGS, SPONGES, SURFACES, MARZIPAN_COLORS, ROUND_SIZES, SQUARE_SIZES, RECTANGLE_SIZES, HEART_SIZES, SHAVINGS_OPTIONS, DRIP_OPTIONS } from './constants';
+import { LOCATIONS, SHAPES, FILLINGS, SPONGES, SURFACES, CAKE_COLORS, ROUND_SIZES, SQUARE_SIZES, RECTANGLE_SIZES, HEART_SIZES, SHAVINGS_OPTIONS, DRIP_OPTIONS } from './constants';
 import { Steps } from './components/Steps';
 import { Calendar } from './components/Calendar';
 import { analyzeCakeImage } from './services/geminiService';
@@ -61,8 +61,11 @@ export default function App() {
               handleShapeChange(analysis.suggestedShape);
             }
             if (analysis.suggestedColor) {
-              // If shape is marzipan/cream/cream_drip, suggest color
-              setOrder(prev => ({ ...prev, marzipanColor: analysis.suggestedColor, creamColor: analysis.suggestedColor }));
+              // Try to find matching color name from our list
+              // This is a naive match, usually Gemini returns generic colors or hex. 
+              // For now, we won't auto-set the color to avoid setting an invalid name, 
+              // but we could implement nearest-color logic later.
+              // setOrder(prev => ({ ...prev })); 
             }
             if (analysis.description) {
               setAiAnalysisResult(analysis.description);
@@ -221,7 +224,19 @@ export default function App() {
   };
 
   const isStepValid = () => {
-    if (step === 2 && order.surface === SurfaceType.EDIBLE_PRINT && !order.ediblePrintImage) return false;
+    // Step 2 Validation: Ensure filling, sponge, and SURFACE DETAILS are selected
+    if (step === 2) {
+        if (!order.filling) return false;
+        if (!order.sponge) return false;
+        if (!order.surface) return false;
+
+        if (order.surface === SurfaceType.MARZIPAN && !order.marzipanColor) return false;
+        if (order.surface === SurfaceType.CREAM && !order.creamColor) return false;
+        if (order.surface === SurfaceType.CREAM_DRIP && (!order.creamColor || !order.dripType)) return false;
+        if (order.surface === SurfaceType.CHOCO_SHAVINGS && !order.shavingsType) return false;
+        if (order.surface === SurfaceType.EDIBLE_PRINT && !order.ediblePrintImage) return false;
+    }
+
     if (step === 4 && !order.pickupDate) return false;
     return true;
   };
@@ -235,6 +250,13 @@ export default function App() {
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
   const selectedLocation = LOCATIONS.find(l => l.id === order.pickupLocationId);
+
+  // Helper to find hex for a color name
+  const getColorHex = (name?: string) => {
+    if (!name) return 'transparent';
+    const c = CAKE_COLORS.find(c => c.name === name);
+    return c ? c.hex : 'transparent';
+  };
 
   const handleSubmitOrder = () => {
     if (!order.customerEmail || !order.customerName || !order.customerPhone) {
@@ -250,9 +272,9 @@ export default function App() {
     if (order.surface === SurfaceType.EDIBLE_PRINT) surfaceDetails += ` (POZOR: Obrázek pro tisk zákazník zašle v odpovědi na tento email)`;
     if (order.surface === SurfaceType.OTHER) surfaceDetails += ` (Pozn: ${order.surfaceOtherNote})`;
 
-    const subject = `Objednávka dortu - ${order.customerName}`;
+    const subject = `Poptávka dortu - ${order.customerName}`;
     const body = `
-NOVÁ OBJEDNÁVKA DORTU
+NOVÁ POPTÁVKA DORTU
 ---------------------
 Zákazník: ${order.customerName}
 Telefon: ${order.customerPhone}
@@ -506,43 +528,62 @@ ${order.specifications}
           {/* Conditional: Marzipan Color */}
           {order.surface === SurfaceType.MARZIPAN && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu marcipánu</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu marcipánu *</label>
               <div className="flex flex-wrap gap-2">
-                {MARZIPAN_COLORS.map(color => (
+                {CAKE_COLORS.map(color => (
                   <button
-                    key={color}
-                    onClick={() => updateOrder({ marzipanColor: color })}
-                    className={`w-8 h-8 rounded-full border-2 shadow-sm ${order.marzipanColor === color ? 'border-gray-800 scale-110 ring-2 ring-white' : 'border-gray-200'}`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
+                    key={color.name}
+                    onClick={() => updateOrder({ marzipanColor: color.name })}
+                    className={`w-10 h-10 rounded-full border-2 shadow-sm transition-transform hover:scale-105 flex items-center justify-center ${
+                      order.marzipanColor === color.name ? 'border-gray-800 scale-110 ring-2 ring-white' : 'border-gray-200'
+                    }`}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                  >
+                     {/* Show checkmark if selected for accessibility/clarity */}
+                     {order.marzipanColor === color.name && (
+                       <span className={`text-xs font-bold ${['Bílá', 'Žlutá'].includes(color.name) ? 'text-black' : 'text-white'}`}>✓</span>
+                     )}
+                  </button>
                 ))}
               </div>
+              <p className="mt-2 text-sm text-brand-800 font-medium">
+                 Vybráno: {order.marzipanColor || <span className="text-gray-400 italic">Nevybráno</span>}
+              </p>
             </div>
           )}
 
           {/* Conditional: Cream Color */}
           {(order.surface === SurfaceType.CREAM || order.surface === SurfaceType.CREAM_DRIP) && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu krému</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Vyberte barvu krému *</label>
               <div className="flex flex-wrap gap-2">
-                {MARZIPAN_COLORS.map(color => (
+                {CAKE_COLORS.map(color => (
                   <button
-                    key={color}
-                    onClick={() => updateOrder({ creamColor: color })}
-                    className={`w-8 h-8 rounded-full border-2 shadow-sm ${order.creamColor === color ? 'border-gray-800 scale-110 ring-2 ring-white' : 'border-gray-200'}`}
-                    style={{ backgroundColor: color }}
-                    title={color}
-                  />
+                    key={color.name}
+                    onClick={() => updateOrder({ creamColor: color.name })}
+                    className={`w-10 h-10 rounded-full border-2 shadow-sm transition-transform hover:scale-105 flex items-center justify-center ${
+                      order.creamColor === color.name ? 'border-gray-800 scale-110 ring-2 ring-white' : 'border-gray-200'
+                    }`}
+                    style={{ backgroundColor: color.hex }}
+                    title={color.name}
+                  >
+                     {order.creamColor === color.name && (
+                       <span className={`text-xs font-bold ${['Bílá', 'Žlutá'].includes(color.name) ? 'text-black' : 'text-white'}`}>✓</span>
+                     )}
+                  </button>
                 ))}
               </div>
+              <p className="mt-2 text-sm text-brand-800 font-medium">
+                 Vybráno: {order.creamColor || <span className="text-gray-400 italic">Nevybráno</span>}
+              </p>
             </div>
           )}
           
           {/* Conditional: Drip Type */}
           {order.surface === SurfaceType.CREAM_DRIP && (
             <div className="mt-2 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Druh stékané čokolády</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Druh stékané čokolády *</label>
               <div className="flex gap-4">
                  {DRIP_OPTIONS.map(opt => (
                     <label key={opt} className="flex items-center cursor-pointer">
@@ -564,7 +605,7 @@ ${order.specifications}
           {/* Conditional: Shavings Type */}
           {order.surface === SurfaceType.CHOCO_SHAVINGS && (
             <div className="mt-4 p-4 bg-brand-50 rounded-lg border border-brand-100 animate-fade-in">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Barva čoko-hoblin</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">Barva čoko-hoblin *</label>
               <div className="flex gap-4">
                  {SHAVINGS_OPTIONS.map(opt => (
                     <label key={opt} className="flex items-center cursor-pointer">
@@ -836,13 +877,28 @@ ${order.specifications}
                     <span className="font-medium text-gray-900">{order.surface}</span>
                     
                     {/* Summary Details for Surface */}
-                    {order.surface === SurfaceType.MARZIPAN && <div className="text-xs mt-1 inline-block px-2 py-0.5 rounded bg-gray-100 border" style={{borderLeftColor: order.marzipanColor, borderLeftWidth: 4}}>Barva</div>}
+                    {order.surface === SurfaceType.MARZIPAN && order.marzipanColor && (
+                       <div className="flex items-center justify-end gap-1 mt-1">
+                          <span className="text-xs text-gray-600">{order.marzipanColor}</span>
+                          <div className="w-3 h-3 rounded-full border border-gray-200" style={{backgroundColor: getColorHex(order.marzipanColor)}} />
+                       </div>
+                    )}
                     
-                    {order.surface === SurfaceType.CREAM && order.creamColor && <div className="text-xs mt-1 inline-block px-2 py-0.5 rounded bg-gray-100 border" style={{borderLeftColor: order.creamColor, borderLeftWidth: 4}}>Barva</div>}
+                    {order.surface === SurfaceType.CREAM && order.creamColor && (
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                           <span className="text-xs text-gray-600">{order.creamColor}</span>
+                           <div className="w-3 h-3 rounded-full border border-gray-200" style={{backgroundColor: getColorHex(order.creamColor)}} />
+                        </div>
+                    )}
                     
                     {order.surface === SurfaceType.CREAM_DRIP && (
                       <div className="flex flex-col items-end">
-                        {order.creamColor && <div className="text-xs mt-1 inline-block px-2 py-0.5 rounded bg-gray-100 border" style={{borderLeftColor: order.creamColor, borderLeftWidth: 4}}>Krém</div>}
+                        {order.creamColor && (
+                            <div className="flex items-center justify-end gap-1 mt-1">
+                               <span className="text-xs text-gray-600">{order.creamColor}</span>
+                               <div className="w-3 h-3 rounded-full border border-gray-200" style={{backgroundColor: getColorHex(order.creamColor)}} />
+                            </div>
+                        )}
                         {order.dripType && <div className="text-xs text-gray-500 mt-0.5">{order.dripType}</div>}
                       </div>
                     )}
@@ -876,7 +932,7 @@ ${order.specifications}
     <div className="min-h-screen bg-gradient-to-br from-brand-50 to-white pb-24">
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-100">
          <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-            <h1 className="font-serif text-xl sm:text-2xl font-bold text-brand-800 truncate">Objednávka dortu - Cukrářství Blahutovi</h1>
+            <h1 className="font-serif text-xl sm:text-2xl font-bold text-brand-800 truncate">Poptávka dortu - Cukrářství Blahutovi</h1>
             <span className="hidden sm:inline-block text-xs font-bold text-brand-400 tracking-widest uppercase ml-4">Objednávkový systém</span>
          </div>
       </nav>

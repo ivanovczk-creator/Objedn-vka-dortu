@@ -36,8 +36,18 @@ export const FILLINGS = Object.values(FillingType);
 export const SPONGES = Object.values(SpongeType);
 export const SURFACES = Object.values(SurfaceType);
 
-export const MARZIPAN_COLORS = [
-  '#FFFFFF', '#FFD700', '#FF69B4', '#87CEEB', '#90EE90', '#FF0000', '#000000', '#800080', '#FFA500'
+export const CAKE_COLORS = [
+  { name: 'Bílá', hex: '#FFFFFF' },
+  { name: 'Šedá', hex: '#9CA3AF' },
+  { name: 'Černá', hex: '#000000' },
+  { name: 'Růžová', hex: '#F472B6' },
+  { name: 'Červená', hex: '#EF4444' },
+  { name: 'Hnědá', hex: '#854d0e' },
+  { name: 'Oranžová', hex: '#F97316' },
+  { name: 'Modrá', hex: '#3B82F6' },
+  { name: 'Fialová', hex: '#A855F7' },
+  { name: 'Zelená', hex: '#22C55E' },
+  { name: 'Žlutá', hex: '#EAB308' },
 ];
 
 export const SHAVINGS_OPTIONS = ["Bílá", "Hnědá", "Růžová"];

@@ -1,4 +1,4 @@
-# 🍰 Sladké Mámení - Objednávkový systém
+# 🍰 Poptávka dortu - Cukrářství Blahutovi
 
 Moderní webová aplikace pro zakázkovou výrobu dortů s integrací umělé inteligence. Aplikace umožňuje zákazníkům nahrávat předlohy, konfigurovat parametry dortu a automaticky generovat objednávky.
 
@@ -10,7 +10,7 @@ Moderní webová aplikace pro zakázkovou výrobu dortů s integrací umělé in
 - **Interaktivní Konfigurátor**:
   - Dynamický výběr pater a průměrů.
   - Specifické možnosti pro různé tvary (Kulatý, Čtverec, Obdélník, Srdce).
-  - Výběr příchutí, korpusů a povrchových úprav.
+  - Výběr příchutí, korpusů a povrchových úprav (s výběrem barev a stylů).
 - **Kalendář**: Chytrý výběr data vyzvednutí s vyloučením svátků a minimální lhůtou pro výrobu (7 dní).
 - **Generování E-mailu**: Automatické sestavení `mailto` odkazu s kompletním shrnutím objednávky.
 
