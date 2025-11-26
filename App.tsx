@@ -262,12 +262,15 @@ export default function App() {
         return;
     }
 
+    // Check if user has uploaded images (either reference or edible print)
+    const hasImagesToAttach = order.images.length > 0 || !!order.ediblePrintImage;
+
     let surfaceDetails: string = order.surface;
     if (order.surface === SurfaceType.MARZIPAN) surfaceDetails += ` (Barva: ${order.marzipanColor || 'Neuvedeno'})`;
     if (order.surface === SurfaceType.CREAM) surfaceDetails += ` (Barva: ${order.creamColor || 'Neuvedeno'})`;
     if (order.surface === SurfaceType.CREAM_DRIP) surfaceDetails += ` (Krém: ${order.creamColor || 'Neuvedeno'}, Stékání: ${order.dripType || 'Neuvedeno'})`;
     if (order.surface === SurfaceType.CHOCO_SHAVINGS) surfaceDetails += ` (Typ: ${order.shavingsType || 'Neuvedeno'})`;
-    if (order.surface === SurfaceType.EDIBLE_PRINT) surfaceDetails += ` (POZOR: Obrázek pro tisk zákazník zašle v odpovědi na tento email)`;
+    if (order.surface === SurfaceType.EDIBLE_PRINT) surfaceDetails += ` (TISK Z PŘÍLOHY)`;
     if (order.surface === SurfaceType.OTHER) surfaceDetails += ` (Pozn: ${order.surfaceOtherNote})`;
 
     const subject = `Poptávka dortu - ${order.customerName}`;
@@ -290,14 +293,27 @@ Rozměry: ${order.tierSizes.join(' / ')} cm ${order.customSizeNote ? `(Pozn: ${o
 Korpus: ${order.sponge}
 Náplň: ${order.filling}
 Povrch: ${surfaceDetails}
-${order.surface === SurfaceType.EDIBLE_PRINT ? '\n!!! DŮLEŽITÉ !!!\nZákazník zvolil jedlý tisk. Pokud není obrázek přiložen v odpovědi, prosím vyžádejte si ho.' : ''}
+
+${hasImagesToAttach ? '!!! DŮLEŽITÉ UPOZORNĚNÍ !!!\nZákazník avizoval, že má k dispozici fotografie (předloha nebo tisk). Prosím zkontrolujte přílohy emailu.\n' : ''}
 
 Nápis: ${order.inscription}
 Množství: ${order.quantity} ks
 
 Poznámky:
 ${order.specifications}
+
+---------------------------------------------------
+INFORMACE PRO ZÁKAZNÍKA:
+Pokud jste do formuláře nahrál(a) fotografie,
+PROSÍM, PŘILOŽTE JE NYNÍ RUČNĚ K TOMUTO EMAILU!
+Z technických důvodů se soubory nepřikládají automaticky.
+---------------------------------------------------
     `;
+    
+    // Explicit warning before opening mail client
+    if (hasImagesToAttach) {
+      alert("⚠️ DŮLEŽITÉ UPOZORNĚNÍ ⚠️\n\nVáš emailový klient se nyní otevře s předvyplněnou objednávkou.\n\nZ technických důvodů internetových prohlížečů se FOTOGRAFIE NEPŘIKLÁDAJÍ AUTOMATICKY.\n\nProsím, PŘILOŽTE FOTOGRAFIE RUČNĚ do otevřeného emailu před odesláním.\n\n(Klikněte OK pro otevření emailu)");
+    }
 
     const mailtoLink = `mailto:cukrarna.pist@seznam.cz?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.location.href = mailtoLink;
@@ -366,6 +382,10 @@ ${order.specifications}
                 )}
               </div>
             )}
+            {/* Warning about upload */}
+            <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded border border-orange-100 mt-2">
+                Poznámka: Fotografie se uloží v prohlížeči, ale k emailu je bude nutné přiložit ručně.
+            </div>
           </div>
           
           {isAnalyzing && (
@@ -650,6 +670,10 @@ ${order.specifications}
                     </button>
                  </div>
                )}
+               {/* Warning about upload */}
+               <div className="text-xs text-orange-600 bg-orange-50 p-2 rounded border border-orange-100 mt-2">
+                   Poznámka: Fotografie se uloží v prohlížeči, ale k emailu je bude nutné přiložit ručně.
+               </div>
             </div>
           )}
 
@@ -847,6 +871,7 @@ ${order.specifications}
                       <img key={img.id} src={img.previewUrl} className="h-12 w-12 object-cover rounded-lg border border-gray-200" alt="cake preview" />
                     ))}
                   </div>
+                  <div className="text-orange-600 text-xs mt-1 font-bold">! Tyto obrázky bude nutné ručně vložit do emailu !</div>
                 </div>
               )}
               
@@ -906,7 +931,7 @@ ${order.specifications}
                     {order.surface === SurfaceType.EDIBLE_PRINT && order.ediblePrintImage && (
                        <div className="mt-1">
                           <img src={order.ediblePrintImage.previewUrl} alt="print preview" className="h-10 w-auto rounded border border-gray-200 ml-auto" />
-                          <div className="text-[10px] text-red-500 mt-1">Nezapomeňte poslat mailem!</div>
+                          <div className="text-[10px] text-red-500 mt-1 font-bold">! Nezapomeňte ručně vložit do emailu !</div>
                        </div>
                     )}
                  </div>
