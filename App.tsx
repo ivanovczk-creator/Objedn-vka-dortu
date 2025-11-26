@@ -61,10 +61,6 @@ export default function App() {
               handleShapeChange(analysis.suggestedShape);
             }
             if (analysis.suggestedColor) {
-              // Try to find matching color name from our list
-              // This is a naive match, usually Gemini returns generic colors or hex. 
-              // For now, we won't auto-set the color to avoid setting an invalid name, 
-              // but we could implement nearest-color logic later.
               // setOrder(prev => ({ ...prev })); 
             }
             if (analysis.description) {
@@ -223,27 +219,29 @@ export default function App() {
     return allSizes.filter(s => parseInt(s) < sizeAbove);
   };
 
-  const isStepValid = () => {
-    // Step 2 Validation: Ensure filling, sponge, and SURFACE DETAILS are selected
-    if (step === 2) {
-        if (!order.filling) return false;
-        if (!order.sponge) return false;
-        if (!order.surface) return false;
+  const validateStep = (currentStepNum: number) => {
+    if (currentStepNum === 2) {
+        if (!order.filling) return { valid: false, msg: "Vyberte prosím náplň." };
+        if (!order.sponge) return { valid: false, msg: "Vyberte prosím korpus." };
+        if (!order.surface) return { valid: false, msg: "Vyberte prosím povrchovou úpravu." };
 
-        if (order.surface === SurfaceType.MARZIPAN && !order.marzipanColor) return false;
-        if (order.surface === SurfaceType.CREAM && !order.creamColor) return false;
-        if (order.surface === SurfaceType.CREAM_DRIP && (!order.creamColor || !order.dripType)) return false;
-        if (order.surface === SurfaceType.CHOCO_SHAVINGS && !order.shavingsType) return false;
-        if (order.surface === SurfaceType.EDIBLE_PRINT && !order.ediblePrintImage) return false;
+        if (order.surface === SurfaceType.MARZIPAN && !order.marzipanColor) return { valid: false, msg: "Vyberte prosím barvu marcipánu." };
+        if (order.surface === SurfaceType.CREAM && !order.creamColor) return { valid: false, msg: "Vyberte prosím barvu krému." };
+        if (order.surface === SurfaceType.CREAM_DRIP && (!order.creamColor || !order.dripType)) return { valid: false, msg: "Vyberte prosím barvu krému a druh stékání." };
+        if (order.surface === SurfaceType.CHOCO_SHAVINGS && !order.shavingsType) return { valid: false, msg: "Vyberte prosím barvu hoblin." };
+        if (order.surface === SurfaceType.EDIBLE_PRINT && !order.ediblePrintImage) return { valid: false, msg: "Pro pokračování musíte nahrát obrázek pro tisk." };
     }
 
-    if (step === 4 && !order.pickupDate) return false;
-    return true;
+    if (currentStepNum === 4 && !order.pickupDate) return { valid: false, msg: "Vyberte prosím datum vyzvednutí." };
+    return { valid: true };
   };
 
   const nextStep = () => {
-    if (isStepValid()) {
+    const validation = validateStep(step);
+    if (validation.valid) {
       setStep(s => Math.min(s + 1, 5));
+    } else {
+      alert(validation.msg);
     }
   };
   
@@ -260,7 +258,7 @@ export default function App() {
 
   const handleSubmitOrder = () => {
     if (!order.customerEmail || !order.customerName || !order.customerPhone) {
-        alert("Vyplňte prosím kontaktní údaje.");
+        alert("Vyplňte prosím všechny kontaktní údaje (Jméno, Telefon, Email), abychom vás mohli kontaktovat.");
         return;
     }
 
@@ -963,16 +961,14 @@ ${order.specifications}
           {step < 5 ? (
              <button 
                onClick={nextStep}
-               disabled={!isStepValid()}
-               className="flex-1 sm:flex-none flex justify-center items-center bg-brand-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-brand-700 hover:shadow-brand-300/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+               className="flex-1 sm:flex-none flex justify-center items-center bg-brand-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-brand-700 hover:shadow-brand-300/50 transition-all"
              >
                Pokračovat <ChevronRight className="ml-1 h-5 w-5" />
              </button>
           ) : (
              <button 
                onClick={handleSubmitOrder}
-               disabled={!order.customerName || !order.customerPhone || !order.customerEmail}
-               className="flex-1 sm:flex-none flex justify-center items-center bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 hover:shadow-green-300/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+               className="flex-1 sm:flex-none flex justify-center items-center bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-green-700 hover:shadow-green-300/50 transition-all"
              >
                Odeslat poptávku <Mail className="ml-2 h-5 w-5" />
              </button>
