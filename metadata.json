@@ -1,0 +1,7 @@
+{
+  "name": "Sladké Mámení - Objednávka Dortu",
+  "description": "Aplikace pro zakázkovou výrobu dortů s AI analýzou předlohy.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
